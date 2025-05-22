@@ -1,4 +1,4 @@
-import { selectDarkMode, setDarkMode } from "../../stores/darkModeSlice";
+import { selectDarkMode, setDarkMode } from "../../stores/slices/darkModeSlice";
 import { useAppSelector, useAppDispatch } from "../../stores/hooks";
 import clsx from "clsx";
 

@@ -8,7 +8,7 @@ import {
 } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { toRaw } from "../../utils/helper";
-import { selectSideMenu } from "../../stores/sideMenuSlice";
+import { selectSideMenu } from "../../stores/slices/sideMenuSlice";
 import { useAppSelector } from "../../stores/hooks";
 import { FormattedMenu, nestedMenu } from "../../layouts/SideMenu/side-menu";
 import { linkTo, enter, leave } from "./mobile-menu";

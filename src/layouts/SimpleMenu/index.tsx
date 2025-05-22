@@ -1,7 +1,7 @@
 import { Transition } from "react-transition-group";
 import { useState, useEffect, Dispatch, SetStateAction } from "react";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
-import { selectSimpleMenu } from "../../stores/simpleMenuSlice";
+import { selectSimpleMenu } from "../../stores/slices/simpleMenuSlice";
 import { useAppSelector } from "../../stores/hooks";
 import { FormattedMenu, linkTo, nestedMenu, enter, leave } from "./simple-menu";
 import Lucide from "../../base-components/Lucide";
@@ -44,8 +44,7 @@ function Main() {
                     "my-6",
 
                     // Animation
-                    `opacity-0 animate-[0.4s_ease-in-out_0.1s_intro-divider] animate-fill-mode-forwards animate-delay-${
-                      (menuKey + 1) * 10
+                    `opacity-0 animate-[0.4s_ease-in-out_0.1s_intro-divider] animate-fill-mode-forwards animate-delay-${(menuKey + 1) * 10
                     }`,
                   ])}
                   key={menuKey}
@@ -55,9 +54,8 @@ function Main() {
                   <Menu
                     className={clsx({
                       // Animation
-                      [`opacity-0 translate-x-[50px] animate-[0.4s_ease-in-out_0.1s_intro-menu] animate-fill-mode-forwards animate-delay-${
-                        (menuKey + 1) * 10
-                      }`]: !menu.active,
+                      [`opacity-0 translate-x-[50px] animate-[0.4s_ease-in-out_0.1s_intro-menu] animate-fill-mode-forwards animate-delay-${(menuKey + 1) * 10
+                        }`]: !menu.active,
                     })}
                     menu={menu}
                     formattedMenuState={[formattedMenu, setFormattedMenu]}
@@ -84,9 +82,8 @@ function Main() {
                             <Menu
                               className={clsx({
                                 // Animation
-                                [`opacity-0 translate-x-[50px] animate-[0.4s_ease-in-out_0.1s_intro-menu] animate-fill-mode-forwards animate-delay-${
-                                  (subMenuKey + 1) * 10
-                                }`]: !subMenu.active,
+                                [`opacity-0 translate-x-[50px] animate-[0.4s_ease-in-out_0.1s_intro-menu] animate-fill-mode-forwards animate-delay-${(subMenuKey + 1) * 10
+                                  }`]: !subMenu.active,
                               })}
                               menu={subMenu}
                               formattedMenuState={[
@@ -117,9 +114,8 @@ function Main() {
                                         <Menu
                                           className={clsx({
                                             // Animation
-                                            [`opacity-0 translate-x-[50px] animate-[0.4s_ease-in-out_0.1s_intro-menu] animate-fill-mode-forwards animate-delay-${
-                                              (lastSubMenuKey + 1) * 10
-                                            }`]: !lastSubMenu.active,
+                                            [`opacity-0 translate-x-[50px] animate-[0.4s_ease-in-out_0.1s_intro-menu] animate-fill-mode-forwards animate-delay-${(lastSubMenuKey + 1) * 10
+                                              }`]: !lastSubMenu.active,
                                           })}
                                           menu={lastSubMenu}
                                           formattedMenuState={[

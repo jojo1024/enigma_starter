@@ -2,8 +2,8 @@ import {
   selectColorScheme,
   setColorScheme,
   ColorSchemes,
-} from "../../stores/colorSchemeSlice";
-import { selectDarkMode } from "../../stores/darkModeSlice";
+} from "../../stores/slices/colorSchemeSlice";
+import { selectDarkMode } from "../../stores/slices/darkModeSlice";
 import { useAppSelector, useAppDispatch } from "../../stores/hooks";
 import clsx from "clsx";
 
@@ -29,7 +29,7 @@ function Main() {
   return (
     <>
       {/* BEGIN: Main Color Switcher */}
-      <div className="fixed bottom-0 right-0 z-50 flex items-center justify-center h-12 px-5 mb-10 border rounded-full shadow-md box mr-52">
+      {/* <div className="fixed bottom-0 right-0 z-50 flex items-center justify-center h-12 px-5 mb-10 border rounded-full shadow-md box mr-52">
         <div className="hidden mr-4 sm:block text-slate-600 dark:text-slate-200">
           Color Scheme
         </div>
@@ -93,7 +93,7 @@ function Main() {
             "border-white dark:border-darkmode-600": colorScheme != "theme-4",
           })}
         ></a>
-      </div>
+      </div> */}
       {/* END: Main Color Switcher */}
     </>
   );

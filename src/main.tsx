@@ -5,11 +5,17 @@ import { Provider } from "react-redux";
 import { store } from "./stores/store";
 import Router from "./router";
 import "./assets/css/app.css";
+import { PersistGate } from 'redux-persist/integration/react';
+import { persistStore } from "redux-persist";
+
+let persistor = persistStore(store);
 
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
   <BrowserRouter>
     <Provider store={store}>
-      <Router />
+      <PersistGate loading={null} persistor={persistor}>
+        <Router />
+      </PersistGate>
     </Provider>
     <ScrollToTop />
   </BrowserRouter>

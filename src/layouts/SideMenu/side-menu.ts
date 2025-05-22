@@ -1,5 +1,5 @@
 import { NavigateFunction } from "react-router-dom";
-import { Menu } from "../../stores/sideMenuSlice";
+import { Menu } from "../../stores/slices/sideMenuSlice";
 import { slideUp, slideDown } from "../../utils/helper";
 
 interface Location {

@@ -1,5 +1,5 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { RootState } from "./store";
+import { RootState } from "../store";
 
 const colorSchemes = [
   "default",
@@ -11,7 +11,7 @@ const colorSchemes = [
 
 export type ColorSchemes = typeof colorSchemes[number];
 
-interface ColorSchemeState {
+export interface ColorSchemeState {
   value: ColorSchemes;
 }
 

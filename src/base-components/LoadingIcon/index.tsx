@@ -1,21 +1,21 @@
 import { useMemo } from "react";
-import { selectDarkMode } from "../../stores/darkModeSlice";
+import { selectDarkMode } from "../../stores/slices/darkModeSlice";
 import { useAppSelector } from "../../stores/hooks";
 
 interface LoadingIconProps extends React.ComponentPropsWithoutRef<"span"> {
   icon:
-    | "audio"
-    | "ball-triangle"
-    | "bars"
-    | "circles"
-    | "grid"
-    | "hearts"
-    | "oval"
-    | "puff"
-    | "rings"
-    | "spinning-circles"
-    | "tail-spin"
-    | "three-dots";
+  | "audio"
+  | "ball-triangle"
+  | "bars"
+  | "circles"
+  | "grid"
+  | "hearts"
+  | "oval"
+  | "puff"
+  | "rings"
+  | "spinning-circles"
+  | "tail-spin"
+  | "three-dots";
   color?: string;
 }
 

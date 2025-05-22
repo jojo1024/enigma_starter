@@ -1,5 +1,5 @@
 import { NavigateFunction } from "react-router-dom";
-import { Menu } from "../../stores/topMenuSlice";
+import { Menu } from "../../stores/slices/topMenuSlice";
 
 interface Location {
   pathname: string;

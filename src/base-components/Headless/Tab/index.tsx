@@ -28,6 +28,7 @@ function Tab({
   return (
     <HeadlessTab as={Fragment}>
       {({ selected }) => (
+        // @ts-ignore
         <li
           className={twMerge([
             "focus-visible:outline-none",
