@@ -12,7 +12,7 @@ import { IReservation } from '../../services/reservation.service';
 import CustomDataTable, { TableColumn } from '../../components/CustomDataTable';
 import { NotificationElement } from '../../base-components/Notification';
 import { CustomNotification, INotification } from '../../components/Notification';
-import ReservationStats from './components/ReservationStats';
+import { Pagination } from '../../components/Pagination';
 
 const Reservations: React.FC = () => {
   const [viewMode, setViewMode] = useState<'card' | 'table'>('card');
@@ -21,8 +21,9 @@ const Reservations: React.FC = () => {
   const [loadingReservationId, setLoadingReservationId] = useState<number | null>(null);
   const notificationRef = useRef<NotificationElement>();
   const [notification, setNotification] = useState<INotification | undefined>();
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
 
-  // Initialisation des états pour les filtres
+  // Initialisation des états pour les filtres avec des valeurs par défaut qui n'affectent pas le filtrage
   const [dateRange, setDateRange] = useState({ start: '', end: '' });
   const [priceRange, setPriceRange] = useState({ min: 0, max: 0 });
   const [nightsRange, setNightsRange] = useState({ min: 0, max: 0 });
@@ -49,6 +50,12 @@ const Reservations: React.FC = () => {
     openCancelModal,
     residences,
     tabsData,
+    pageIndex,
+    setPageIndex,
+    pageCount,
+    itemsPerPage,
+    endIndex,
+    startIndex
   } = useReservations({
     dateRange,
     priceRange,
@@ -110,10 +117,16 @@ const Reservations: React.FC = () => {
   };
 
   const handleConfirm = async (reservation: IReservation) => {
-    setLoadingReservationId(reservation.reservationId);
+    setSelectedReservationForDetails(reservation);
+    setShowConfirmModal(true);
+  };
+
+  const handleConfirmReservationSubmit = async () => {
+    if (!selectedReservationForDetails) return;
+
+    setLoadingReservationId(selectedReservationForDetails.reservationId);
     try {
-      await handleConfirmReservation(reservation);
-      // Si on arrive ici, c'est que la confirmation a réussi
+      await handleConfirmReservation(selectedReservationForDetails);
       displayNotification({
         type: "success",
         content: "La réservation a été confirmée avec succès"
@@ -126,6 +139,8 @@ const Reservations: React.FC = () => {
       });
     } finally {
       setLoadingReservationId(null);
+      setShowConfirmModal(false);
+      setSelectedReservationForDetails(null);
     }
   };
 
@@ -160,19 +175,48 @@ const Reservations: React.FC = () => {
   const columns: TableColumn<IReservation>[] = [
     { header: 'Client', accessor: 'clientNom', visible: true },
     { header: 'Résidence', accessor: 'residenceNom', visible: true },
-    { header: 'Statut', accessor: 'reservationStatut', visible: true },
     {
-      header: 'Dates',
-      visible: true,
-      renderCell: (value: any, row: IReservation) => (
-        <div className="text-center">
-          <div>{formatDate(new Date(row.reservationDateArrivee))}</div>
-          <div className="text-xs text-slate-500">au</div>
-          <div>{formatDate(new Date(row.reservationDateDepart))}</div>
-          <div className="text-xs text-slate-500">{row.reservationNuit} nuits</div>
-        </div>
-      )
+      header: 'Date d\'arrivée',
+      accessor: 'reservationDateArrivee',
+      renderCell: (value: string) => new Date(value).toLocaleDateString(),
+      width: '150px',
+      tableTextPosition: 'text-center'
     },
+    {
+      header: 'Date de départ',
+      accessor: 'reservationDateDepart',
+      renderCell: (value: string) => new Date(value).toLocaleDateString(),
+      width: '150px',
+      tableTextPosition: 'text-center'
+    },
+    {
+      header: 'Statut',
+      accessor: 'reservationStatut',
+      renderCell: (value: string) => (
+        <span className={`px-2 py-1 rounded-full text-xs ${value === 'confirmee'
+          ? 'bg-green-100 text-green-800'
+          : value === 'annulee'
+            ? 'bg-red-100 text-red-800'
+            : 'bg-yellow-100 text-yellow-800'
+          }`}>
+          {value}
+        </span>
+      ),
+      width: '120px',
+      tableTextPosition: 'text-center'
+    },
+    // {
+    //   header: 'Dates',
+    //   visible: true,
+    //   renderCell: (value: any, row: IReservation) => (
+    //     <div className="text-center">
+    //       <div>{formatDate(new Date(row.reservationDateArrivee))}</div>
+    //       <div className="text-xs text-slate-500">au</div>
+    //       <div>{formatDate(new Date(row.reservationDateDepart))}</div>
+    //       <div className="text-xs text-slate-500">{row.reservationNuit} nuits</div>
+    //     </div>
+    //   )
+    // },
     {
       header: 'Prix total',
       accessor: 'reservationPrixTotal',
@@ -243,8 +287,34 @@ const Reservations: React.FC = () => {
         onExport={handleExport}
       />
 
-      {/* Toggle de vue */}
-      <div className="flex justify-end mt-4">
+      {/* Contrôles et pagination */}
+      <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mt-4">
+        <div className="flex items-center gap-4">
+
+          {viewMode === 'card' && (
+            <div className="flex items-center gap-2">
+              {/* <span className="text-slate-500">
+                {((currentPage - 1) * 18) + 1} - {Math.min(currentPage * 18, paginatedReservations.length)} sur {paginatedReservations.length}
+              </span> */}
+              {/* <ReservationPagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={setCurrentPage}
+              /> */}
+              {setPageIndex && pageCount > 1 && (
+                <div className='flex mr-2 justify-end items-center mt-3'>
+                  <Pagination
+                    pageIndex={pageIndex}
+                    setPageIndex={setPageIndex}
+                    pageCount={totalPages}
+                  />
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Toggle de vue */}
         <Tab.Group>
           <div className="pr-1 intro-y">
             <div className="p-1 box">
@@ -256,7 +326,7 @@ const Reservations: React.FC = () => {
                     onClick={() => setViewMode('card')}
                   >
                     <Lucide icon="LayoutGrid" className="w-4 h-4 mr-1" />
-                    Cartes
+                    Carte
                   </Tab.Button>
                 </Tab>
                 <Tab>
@@ -277,7 +347,13 @@ const Reservations: React.FC = () => {
 
       {/* Liste des réservations */}
       <div className="mt-5 intro-y">
-        {paginatedReservations.length === 0 ? (
+        {isLoading ? (
+          <div className="col-span-12 py-8 text-center">
+            <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto"></div>
+            <h3 className="mt-2 text-lg font-medium">Chargement des réservations...</h3>
+            <p className="mt-1 text-slate-500">Veuillez patienter pendant que nous récupérons les données</p>
+          </div>
+        ) : paginatedReservations.length === 0 ? (
           <div className="col-span-12 py-8 text-center">
             <Lucide icon="Search" className="w-16 h-16 mx-auto text-slate-300" />
             <h3 className="mt-2 text-lg font-medium">Aucune réservation trouvée</h3>
@@ -289,7 +365,7 @@ const Reservations: React.FC = () => {
           </div>
         ) : viewMode === 'card' ? (
           <div className="grid grid-cols-12 gap-6">
-            {paginatedReservations.map((reservation) => (
+            {paginatedReservations.slice(startIndex, endIndex).map((reservation) => (
               <div key={reservation.reservationId} className="col-span-12 sm:col-span-6 lg:col-span-4 2xl:col-span-3">
                 <div className="h-full flex flex-col">
                   <ReservationCard
@@ -305,46 +381,91 @@ const Reservations: React.FC = () => {
             ))}
           </div>
         ) : (
-          <CustomDataTable
-            data={paginatedReservations}
-            columns={columns}
-            rowKey={(row) => String(row.reservationId)}
-            selectedRows={[]}
-            onSelectRow={() => null}
-            onSelectAllRows={() => null}
-            onRowDoubleClick={handleViewDetails}
-            onDeleteSelectRows={() => null}
-            endIndex={paginatedReservations.length}
-            startIndex={0}
-            pageIndex={currentPage}
-            setPageIndex={setCurrentPage}
-            pageCount={totalPages}
-            loading={isLoading}
-            noDataMessage="Aucune réservation trouvée"
-            search={searchTerm}
-            setSearch={setSearchTerm}
-            showSearchBar={true}
-          />
+          <div className={`w-full overflow-x-auto hide-scrollbar mt-4 intro-x box`}>
+            <CustomDataTable
+              data={paginatedReservations}
+              columns={columns}
+              rowKey={(row) => String(row.reservationId)}
+              selectedRows={[]}
+              onSelectRow={() => null}
+              onSelectAllRows={() => null}
+              onRowDoubleClick={handleViewDetails}
+              onDeleteSelectRows={() => null}
+              endIndex={endIndex}
+              startIndex={startIndex}
+              pageIndex={pageIndex}
+              setPageIndex={setPageIndex}
+              pageCount={totalPages}
+              loading={isLoading}
+              noDataMessage="Aucune réservation trouvée"
+              search={searchTerm}
+              setSearch={setSearchTerm}
+              showSearchBar={true}
+            />
+          </div>
         )}
       </div>
 
-      {/* Pagination */}
-      {paginatedReservations.length > 0 && viewMode === 'card' && (
-        <ReservationPagination
-          currentPage={currentPage}
-          totalPages={totalPages}
-          onPageChange={setCurrentPage}
-        />
-      )}
+      {/* Modal de confirmation */}
+      <Dialog
+        open={showConfirmModal}
+        onClose={() => setShowConfirmModal(false)}
+        className="relative z-50"
+      >
+        <Dialog.Panel className="fixed inset-0 z-10 overflow-y-auto">
+          <div className="flex items-center justify-center min-h-screen p-4">
+            <div className="bg-white rounded-lg shadow-xl w-full max-w-md mx-auto">
+              <div className="p-5">
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-lg font-medium">Confirmer la réservation</h3>
+                  <button
+                    onClick={() => setShowConfirmModal(false)}
+                    className="text-slate-400 hover:text-slate-500"
+                  >
+                    <Lucide icon="X" className="w-5 h-5" />
+                  </button>
+                </div>
 
-      {/* Modal d'annulation */}
-      <CancelReservationModal
-        isOpen={showCancelModal}
-        onClose={() => setShowCancelModal(false)}
-        onConfirm={handleCancelReservation}
-        reservation={selectedReservation}
-        isLoading={isLoading}
-      />
+                <div className="mt-4">
+                  <p className="text-slate-600">
+                    Êtes-vous sûr de vouloir confirmer cette réservation ?
+                  </p>
+                  {selectedReservationForDetails && (
+                    <div className="mt-4 space-y-2">
+                      <p><span className="font-medium">Client:</span> {selectedReservationForDetails.clientNom}</p>
+                      <p><span className="font-medium">Résidence:</span> {selectedReservationForDetails.residenceNom}</p>
+                      <p><span className="font-medium">Dates:</span> {formatDate(new Date(selectedReservationForDetails.reservationDateArrivee))} - {formatDate(new Date(selectedReservationForDetails.reservationDateDepart))}</p>
+                    </div>
+                  )}
+                </div>
+
+                <div className="mt-6 flex justify-end space-x-3">
+                  <button
+                    onClick={() => setShowConfirmModal(false)}
+                    className="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-md hover:bg-slate-50"
+                  >
+                    Annuler
+                  </button>
+                  <button
+                    onClick={handleConfirmReservationSubmit}
+                    disabled={isLoading}
+                    className="px-4 py-2 text-sm font-medium text-white bg-primary rounded-md hover:bg-primary/90 disabled:opacity-50"
+                  >
+                    {isLoading ? (
+                      <div className="flex items-center">
+                        <div className="w-4 h-4 border-2 border-t-white rounded-full animate-spin mr-2"></div>
+                        Confirmation...
+                      </div>
+                    ) : (
+                      'Confirmer'
+                    )}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </Dialog.Panel>
+      </Dialog>
 
       {/* Modal de détails */}
       <Dialog

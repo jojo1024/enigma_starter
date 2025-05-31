@@ -34,6 +34,13 @@ export const useReservations = ({
 
     const ITEMS_PER_PAGE = 18;
 
+
+    const [pageIndex, setPageIndex] = useState(0);
+    const itemsPerPage = 10;
+    const pageCount = Math.ceil(reservations.length / itemsPerPage);
+    const startIndex = pageIndex * itemsPerPage;
+    const endIndex = pageIndex * itemsPerPage + itemsPerPage;
+
     useEffect(() => {
         const loadData = async () => {
             try {
@@ -56,7 +63,7 @@ export const useReservations = ({
     // Réinitialiser la page courante quand les filtres changent
     useEffect(() => {
         setCurrentPage(1);
-    }, [searchTerm, statusFilter, residenceFilter]);
+    }, [searchTerm, statusFilter, residenceFilter, dateRange, priceRange, nightsRange, guestsRange]);
 
     const canCancelReservation = useCallback((reservation: IReservation) => {
         if (reservation.reservationStatut === 'annulee' || reservation.reservationStatut === 'terminee') {
@@ -86,22 +93,22 @@ export const useReservations = ({
                     const matchesStatus = statusFilter === "all" || reservation.reservationStatut === statusFilter;
                     const matchesResidence = residenceFilter === "all" || reservation.residenceId.toString() === residenceFilter;
 
-                    // Filtre par dates
+                    // Filtre par dates - ne s'applique que si les dates sont définies
                     const dateMatch = !dateRange.start || !dateRange.end || (
                         new Date(reservation.reservationDateArrivee) >= new Date(dateRange.start) &&
                         new Date(reservation.reservationDateDepart) <= new Date(dateRange.end)
                     );
 
-                    // Filtre par prix
+                    // Filtre par prix - ne s'applique que si les valeurs sont supérieures à 0
                     const price = parseFloat(reservation.reservationPrixTotal);
                     const priceMatch = (priceRange.min === 0 || price >= priceRange.min) &&
                                      (priceRange.max === 0 || price <= priceRange.max);
 
-                    // Filtre par nuits
+                    // Filtre par nuits - ne s'applique que si les valeurs sont supérieures à 0
                     const nightsMatch = (nightsRange.min === 0 || reservation.reservationNuit >= nightsRange.min) &&
                                       (nightsRange.max === 0 || reservation.reservationNuit <= nightsRange.max);
 
-                    // Filtre par invités
+                    // Filtre par invités - ne s'applique que si les valeurs sont supérieures à 0
                     const guestsMatch = (guestsRange.min === 0 || reservation.reservationAdultes >= guestsRange.min) &&
                                       (guestsRange.max === 0 || reservation.reservationAdultes <= guestsRange.max);
 
@@ -121,11 +128,11 @@ export const useReservations = ({
 
     // Calculer les statistiques pour les onglets
     const tabsData = useMemo(() => [
-        { id: 'all', label: 'Toutes', count: filteredReservations.length },
-        { id: 'en_attente', label: 'En attente', count: filteredReservations.filter(r => r.reservationStatut === 'en_attente').length },
-        { id: 'confirmee', label: 'Confirmées', count: filteredReservations.filter(r => r.reservationStatut === 'confirmee').length },
-        { id: 'annulee', label: 'Annulées', count: filteredReservations.filter(r => r.reservationStatut === 'annulee').length },
-    ], [filteredReservations]);
+        { id: 'all', label: 'Toutes', count: reservations.length },
+        { id: 'en_attente', label: 'En attente', count: reservations.filter(r => r.reservationStatut === 'en_attente').length },
+        { id: 'confirmee', label: 'Confirmées', count: reservations.filter(r => r.reservationStatut === 'confirmee').length },
+        { id: 'annulee', label: 'Annulées', count: reservations.filter(r => r.reservationStatut === 'annulee').length },
+    ], [reservations]);
 
     const totalPages = Math.max(1, Math.ceil(filteredReservations.length / ITEMS_PER_PAGE));
     
@@ -134,12 +141,20 @@ export const useReservations = ({
         if (currentPage > totalPages) {
             setCurrentPage(totalPages);
         }
-    }, [currentPage, totalPages]);
+    }, [currentPage, totalPages, filteredReservations.length]);
 
     const paginatedReservations = useMemo(() => {
         const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-        return filteredReservations.slice(startIndex, startIndex + ITEMS_PER_PAGE);
-    }, [filteredReservations, currentPage]);
+        const endIndex = startIndex + ITEMS_PER_PAGE;
+        return filteredReservations.slice(startIndex, endIndex);
+    }, [filteredReservations, currentPage, ITEMS_PER_PAGE]);
+
+    // Fonction pour changer de page
+    const handlePageChange = useCallback((newPage: number) => {
+        if (newPage >= 1 && newPage <= totalPages) {
+            setCurrentPage(newPage);
+        }
+    }, [totalPages]);
 
     const handleConfirmReservation = async (reservation: IReservation) => {
         try {
@@ -197,7 +212,7 @@ export const useReservations = ({
         residenceFilter,
         setResidenceFilter,
         currentPage,
-        setCurrentPage,
+        setCurrentPage: handlePageChange,
         selectedReservation,
         showCancelModal,
         setShowCancelModal,
@@ -209,6 +224,13 @@ export const useReservations = ({
         openCancelModal,
         residences,
         tabsData,
-        filteredReservations
+        filteredReservations,
+
+        pageIndex,
+        setPageIndex,
+        pageCount,
+        itemsPerPage,
+        endIndex,
+        startIndex
     };
 }; 

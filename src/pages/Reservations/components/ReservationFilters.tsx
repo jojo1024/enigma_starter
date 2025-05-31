@@ -3,6 +3,8 @@ import { Tab } from '../../../base-components/Headless';
 import { Residence } from '../../../schema/residence.schema';
 import Lucide from '../../../base-components/Lucide';
 import { formatCurrency } from '../../../utils/functions';
+import { FormInput, FormSelect } from '../../../base-components/Form';
+import Litepicker from '../../../base-components/Litepicker';
 
 interface ReservationFiltersProps {
     residences: Residence[];
@@ -48,33 +50,67 @@ const ReservationFilters: React.FC<ReservationFiltersProps> = ({
     onExport,
 }) => {
     return (
-        <div className="intro-y">
+        <div className="intro-y mt-4">
             {/* En-tête avec titre et bouton d'export */}
-            <div className="flex flex-col sm:flex-row items-center justify-between mb-4">
+            <div className="flex justify-between items-center mb-4">
                 <h2 className="text-lg font-medium">Gestion des réservations</h2>
                 <button
                     onClick={onExport}
-                    className="btn btn-outline-primary mt-2 sm:mt-0"
+                    className="btn btn-outline-primary"
                 >
                     <Lucide icon="Download" className="w-4 h-4 mr-2" />
                     Exporter
                 </button>
             </div>
 
-            {/* Barre de recherche principale */}
-            <div className="flex flex-col sm:flex-row gap-4 mb-4">
-                <div className="flex-1">
-                    <input
+            <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mt-4">
+                <div className="flex items-center gap-4">
+                </div>
+
+                {/* Toggle de vue */}
+                <Tab.Group>
+                    <div className="pr-1 intro-y">
+                        <div className="p-1 box">
+                            <Tab.List variant="pills">
+
+                                {
+                                    tabsData.map((item) => (
+                                        <Tab key={item.id}>
+                                            <Tab.Button
+                                                className={`flex text-xs items-center sm:px-4 py-2 sm:text-sm rounded-lg ${statusFilter === item.id ? 'bg-primary text-white' : ''}`}
+                                                as="button"
+                                                onClick={() => setStatusFilter(item.id)}
+                                            >
+                                                <span className="truncate">{item.label}</span>
+                                                <span className="ml-2 sm:block hidden bg-white/20 px-2 py-0.5 rounded-full text-xs">
+                                                    {item.count}
+                                                </span>
+                                            </Tab.Button>
+                                        </Tab>
+                                    ))
+                                }
+                            </Tab.List>
+                        </div>
+                    </div>
+                </Tab.Group>
+            </div>
+
+
+            {/* Filtres */}
+            <div className="hidden sm:grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 p-4 bg-slate-50 rounded-lg ">
+                {/* Barre de recherche */}
+                <div className="lg:col-span-2">
+                    <FormInput
                         type="text"
-                        className="form-control w-full"
                         placeholder="Rechercher par nom, email ou téléphone..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                     />
                 </div>
-                <div className="w-full sm:w-64">
-                    <select
-                        className="form-select w-full"
+
+                {/* Sélecteur de résidence */}
+                <div>
+                    <FormSelect
                         value={residenceFilter}
                         onChange={(e) => setResidenceFilter(e.target.value)}
                     >
@@ -84,54 +120,42 @@ const ReservationFilters: React.FC<ReservationFiltersProps> = ({
                                 {residence.residenceNom}
                             </option>
                         ))}
-                    </select>
+                    </FormSelect>
                 </div>
-            </div>
 
-            {/* Filtres avancés */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
                 {/* Filtre par dates */}
-                <div className="flex flex-col">
-                    <label className="form-label">Période</label>
-                    <div className="flex gap-2">
-                        <input
-                            type="date"
-                            className="form-control"
-                            value={dateRange.start}
-                            onChange={(e) => setDateRange({ ...dateRange, start: e.target.value })}
-                        />
-                        <input
-                            type="date"
-                            className="form-control"
-                            value={dateRange.end}
-                            onChange={(e) => setDateRange({ ...dateRange, end: e.target.value })}
-                        />
-                    </div>
-                </div>
-
-            </div>
-
-            {/* Onglets de statut */}
-            <div className="mt-4">
-                <Tab.Group>
-                    <div className="pr-1">
-                        <div className="p-1 box">
-                            <Tab.List variant="pills">
-                                {tabsData.map(onglet => (
-                                    <Tab key={onglet.id}>
-                                        <Tab.Button
-                                            className={`w-full flex py-2 text-xs sm:text-sm truncate ${statusFilter === onglet.id ? 'bg-primary text-white' : ''}`}
-                                            as="button"
-                                            onClick={() => setStatusFilter(onglet.id)}
-                                        >
-                                            {onglet.label} <span>({onglet.count})</span>
-                                        </Tab.Button>
-                                    </Tab>
-                                ))}
-                            </Tab.List>
+                <div className="lg:col-span-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label className="text-xs text-slate-500">Date de début</label>
+                            <Litepicker
+                                value={dateRange.start}
+                                onChange={(date) => setDateRange({ ...dateRange, start: date })}
+                                options={{
+                                    format: 'YYYY-MM-DD',
+                                    singleMode: true,
+                                    lang: 'fr-FR',
+                                }}
+                                getRef={(el) => { }}
+                                placeholder="Date début"
+                            />
+                        </div>
+                        <div>
+                            <label className="text-xs text-slate-500">Date de fin</label>
+                            <Litepicker
+                                value={dateRange.end}
+                                onChange={(date) => setDateRange({ ...dateRange, end: date })}
+                                options={{
+                                    format: 'YYYY-MM-DD',
+                                    singleMode: true,
+                                    lang: 'fr-FR',
+                                }}
+                                getRef={(el) => { }}
+                                placeholder="Date fin"
+                            />
                         </div>
                     </div>
-                </Tab.Group>
+                </div>
             </div>
         </div>
     );

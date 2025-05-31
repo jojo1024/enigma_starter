@@ -145,18 +145,20 @@ const CustomDataTable = <T,>({
                 <>Sélectionnés: <span className='font-bold'>{selectedRows.length}</span></>
               )}
             </div>
+
+               {/* Pagination */}
+      {setPageIndex && pageCount > 1 && (
+        <div className='flex mr-2 justify-end items-center mt-3'>
+          <Pagination
+            pageIndex={pageIndex}
+            setPageIndex={setPageIndex}
+            pageCount={pageCount}
+          />
+        </div>
+      )}
           </div>
           
           <div className="flex items-center">
-            {showSearchBar && setSearch && (
-              <input
-                type="text"
-                className="form-control mr-2"
-                placeholder="Rechercher..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-              />
-            )}
             
             <Button
               variant="outline-secondary"
@@ -319,16 +321,7 @@ const CustomDataTable = <T,>({
         </table>
       </div>
 
-      {/* Pagination */}
-      {setPageIndex && pageCount > 1 && (
-        <div className='flex mr-2 justify-end items-center mt-3'>
-          <Pagination
-            pageIndex={pageIndex}
-            setPageIndex={setPageIndex}
-            pageCount={pageCount}
-          />
-        </div>
-      )}
+   
     </div>
   );
 };

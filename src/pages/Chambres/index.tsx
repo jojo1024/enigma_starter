@@ -1,20 +1,16 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import Button from '../../base-components/Button';
 import Lucide from '../../base-components/Lucide';
-import { NotificationElement } from '../../base-components/Notification';
 import ChambreForm from '../../components/ChambreForm';
+import ChambreTable from '../../components/chambres/ChambreTable';
 import ConfirmeBox from '../../components/ConfirmeBox';
 import DialogBox from '../../components/DialogBox';
-import { CustomNotification, INotification } from '../../components/Notification';
-import { IChambre } from '../../schema/chambre.schema';
-import { useChambres } from './hooks/useChambres';
-import ChambreFilters from '../../components/chambres/ChambreFilters';
-import ChambreTable from '../../components/chambres/ChambreTable';
-import { useAppDispatch } from '../../stores/store';
-import { fetchAllChambres } from '../../stores/slices/ChambreSlice';
-import { fetchAllResidences } from '../../stores/slices/residenceSlice';
+import { CustomNotification } from '../../components/Notification';
 import { ChambreStatus } from '../../schema/chambre.schema';
+import { fetchAllChambres } from '../../stores/slices/ChambreSlice';
 import { fetchAllConfigChambres } from '../../stores/slices/configChambreSlice';
+import { useAppDispatch } from '../../stores/store';
+import { useChambres } from './hooks/useChambres';
 
 const Chambres = () => {
     const dispatch = useAppDispatch();
