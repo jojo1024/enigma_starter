@@ -10,7 +10,7 @@ export enum ChambreStatus {
 export const CreateChambreSchema = z.object({
     chambreConfigId: z.number().positive("L'ID de la configuration est requis"),
     chambreNom: z.string().min(1, "Le nom de la chambre est requis"),
-    etatChambre: z.nativeEnum(ChambreStatus),
+    etatChambre: z.enum(["DISPONIBLE", "OCCUPEE", "MAINTENANCE"]),
 });
 
 // Schéma pour la mise à jour d'une chambre
@@ -34,7 +34,7 @@ export interface IChambre {
     chambreNom: string;
     chambreDateCreation: string;
     chambreDateModification: string;
-    etatChambre: ChambreStatus;
+    etatChambre: "DISPONIBLE" | "OCCUPEE" | "MAINTENANCE";
     configChambreNom: string;
     configCapaciteAdultes: number;
     typeChambreId: number;

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import Button from '../../base-components/Button';
 import Lucide from '../../base-components/Lucide';
 import ChambreForm from '../../components/ChambreForm';
@@ -11,15 +11,15 @@ import { fetchAllChambres } from '../../stores/slices/ChambreSlice';
 import { fetchAllConfigChambres } from '../../stores/slices/configChambreSlice';
 import { useAppDispatch } from '../../stores/store';
 import { useChambres } from './hooks/useChambres';
+import ChambreFilters from '../../components/chambres/ChambreFilters';
 
 const Chambres = () => {
     const dispatch = useAppDispatch();
-    const [pageIndex, setPageIndex] = useState(0);
-    const itemsPerPage = 10;
 
     const {
         chambres,
         configChambres,
+        residences,
         loading,
         error,
         isModalOpen,
@@ -31,6 +31,19 @@ const Chambres = () => {
         errors,
         isSaving,
         isDeleting,
+        searchTerm,
+        setSearchTerm,
+        residenceFilter,
+        setResidenceFilter,
+        statusFilter,
+        setStatusFilter,
+        tabsData,
+        pageIndex,
+        setPageIndex,
+        pageCount,
+        itemsPerPage,
+        startIndex,
+        endIndex,
         handleInputChange,
         handleSelectChange,
         handleEdit,
@@ -44,14 +57,7 @@ const Chambres = () => {
         notificationRef
     } = useChambres();
 
-    useEffect(() => {
-        dispatch(fetchAllChambres());
-        dispatch(fetchAllConfigChambres());
-    }, [dispatch]);
 
-    const pageCount = Math.ceil(chambres.length / itemsPerPage);
-    const startIndex = pageIndex * itemsPerPage;
-    const endIndex = Math.min(startIndex + itemsPerPage, chambres.length);
 
     return (
         <>
@@ -64,7 +70,7 @@ const Chambres = () => {
                         setChambreFormData({
                             chambreNom: "",
                             chambreConfigId: 0,
-                            etatChambre: ChambreStatus.DISPONIBLE,
+                            etatChambre: "DISPONIBLE",
                             residenceId: 0
                         });
                         setIsModalOpen(true);
@@ -75,6 +81,18 @@ const Chambres = () => {
                     Ajouter une chambre
                 </Button>
             </div>
+
+            {/* Filtres */}
+            <ChambreFilters
+                residences={residences}
+                residenceFilter={residenceFilter}
+                setResidenceFilter={setResidenceFilter}
+                statusFilter={statusFilter}
+                setStatusFilter={setStatusFilter}
+                searchTerm={searchTerm}
+                setSearchTerm={setSearchTerm}
+                tabsData={tabsData}
+            />
 
             <DialogBox
                 dialogProps={{

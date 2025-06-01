@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useMemo, useEffect } from 'react';
 import { useAppDispatch, useAppSelector } from '../../../stores/store';
 import { IChambre, ChambreStatus } from '../../../schema/chambre.schema';
 import { 
@@ -13,58 +13,86 @@ import {
 import { fetchAllResidences, selectAllResidences } from '../../../stores/slices/residenceSlice';
 import { INotification } from '../../../components/Notification';
 import { NotificationElement } from '../../../base-components/Notification/index';
-import { selectAllConfigChambres } from '../../../stores/slices/configChambreSlice';
+import { fetchAllConfigChambres, selectAllConfigChambres } from '../../../stores/slices/configChambreSlice';
 
 const initialiseChambre: Partial<IChambre> = {
     chambreNom: "",
     chambreConfigId: 0,
-    etatChambre: ChambreStatus.DISPONIBLE,
+    etatChambre: "DISPONIBLE",
     residenceId: 0
 };
 
 export const useChambres = () => {
     const dispatch = useAppDispatch();
-    const notificationRef = useRef<NotificationElement>();
     const chambres = useAppSelector(selectAllChambres);
     const configChambres = useAppSelector(selectAllConfigChambres);
+    const residences = useAppSelector(selectAllResidences);
     const loading = useAppSelector(selectChambreLoading);
     const error = useAppSelector(selectChambreError);
 
+    // États pour les filtres
+    const [searchTerm, setSearchTerm] = useState('');
+    const [residenceFilter, setResidenceFilter] = useState('all');
+    const [statusFilter, setStatusFilter] = useState('all');
+
+    // États pour la pagination
+    const [pageIndex, setPageIndex] = useState(0);
+    const itemsPerPage = 10;
+
+    // États pour les modales et notifications
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [selectedChambre, setSelectedChambre] = useState<Partial<IChambre> | null>(null);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-    const [message, setMessage] = useState<string>("");
-    const [notification, setNotification] = useState<INotification | undefined>();
+    const [selectedChambre, setSelectedChambre] = useState<IChambre | null>(null);
     const [chambreFormData, setChambreFormData] = useState<Partial<IChambre>>(initialiseChambre);
-    console.log("🚀 ~ useChambres ~ chambreFormData:", chambreFormData)
     const [errors, setErrors] = useState<{ [key: string]: string }>({});
     const [isSaving, setIsSaving] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
+    const [message, setMessage] = useState('');
+    const notificationRef = useRef<NotificationElement>();
+    const [notification, setNotification] = useState<INotification | undefined>();
 
+    // Filtrage des chambres
+    const filteredChambres = useMemo(() => {
+        return chambres.filter(chambre => {
+            const matchesSearch = chambre.chambreNom.toLowerCase().includes(searchTerm.toLowerCase());
+            const matchesResidence = residenceFilter === 'all' || chambre.residenceId.toString() === residenceFilter;
+            const matchesStatus = statusFilter === 'all' || chambre.etatChambre.toString() === statusFilter;
+            return matchesSearch && matchesResidence && matchesStatus;
+        });
+    }, [chambres, searchTerm, residenceFilter, statusFilter]);
+
+    // Calcul des données pour les onglets
+    const tabsData = useMemo(() => [
+        { id: 'all', label: 'Toutes', count: chambres.length },
+        { id: "DISPONIBLE", label: 'Disponibles', count: chambres.filter(c => c.etatChambre === "DISPONIBLE").length },
+        { id: "OCCUPEE", label: 'Occupées', count: chambres.filter(c => c.etatChambre === "OCCUPEE").length },
+        { id: "MAINTENANCE", label: 'En maintenance', count: chambres.filter(c => c.etatChambre === "MAINTENANCE").length },
+    ], [chambres]);
+
+    // Calcul de la pagination
+    const pageCount = Math.ceil(filteredChambres.length / itemsPerPage);
+    const startIndex = pageIndex * itemsPerPage;
+    const endIndex = Math.min(startIndex + itemsPerPage, filteredChambres.length);
+
+    // Fonctions de gestion des chambres
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const { id, value } = e.target;
-        setChambreFormData(prev => ({
-            ...prev,
-            [id]: value
-        }));
+        const { name, value } = e.target;
+        setChambreFormData(prev => ({ ...prev, [name]: value }));
+        if (errors[name]) {
+            setErrors(prev => ({ ...prev, [name]: '' }));
+        }
     };
 
     const handleSelectChange = (e: { id: string, value: number }) => {
-        setChambreFormData(prev => ({
-            ...prev,
-            [e.id]: e.value
-        }));
+        setChambreFormData(prev => ({ ...prev, [e.id]: e.value }));
+        if (errors[e.id]) {
+            setErrors(prev => ({ ...prev, [e.id]: '' }));
+        }
     };
 
     const handleEdit = (chambre: IChambre) => {
         setSelectedChambre(chambre);
-        setChambreFormData({
-            chambreId: chambre.chambreId,
-            chambreConfigId: chambre.chambreConfigId,
-            chambreNom: chambre.chambreNom,
-            etatChambre: chambre.etatChambre,
-            residenceId: chambre.residenceId
-        });
+        setChambreFormData(chambre);
         setIsModalOpen(true);
     };
 
@@ -73,100 +101,62 @@ export const useChambres = () => {
         setIsDeleteModalOpen(true);
     };
 
-    const validateForm = () => {
-        const newErrors: { [key: string]: string } = {};
-
-        if (!chambreFormData.chambreNom) {
-            newErrors.chambreNom = "Le nom de la chambre est requis";
-        }
-        if (!chambreFormData.chambreConfigId || chambreFormData.chambreConfigId === 0) {
-            newErrors.chambreConfigId = "La configuration de la chambre est requise";
-        }
-        if (!chambreFormData.residenceId || chambreFormData.residenceId === 0) {
-            newErrors.residenceId = "La résidence est requise";
-        }
-
-        setErrors(newErrors);
-        return Object.keys(newErrors).length === 0;
-    };
-
-    const showNotification = () => notificationRef.current?.showToast();
-
-    const displayNotification = (notification: INotification) => {
-        setNotification(notification);
-        setTimeout(() => {
-            showNotification();
-        }, 30);
-    };
-
     const onSubmit = async () => {
-        if (!validateForm()) {
-            return;
-        }
-        setIsSaving(true);
         try {
-            if (selectedChambre?.chambreId) {
+            setIsSaving(true);
+            if (selectedChambre) {
                 await dispatch(updateChambre({
                     chambreId: selectedChambre.chambreId,
                     chambre: {
                         chambreConfigId: chambreFormData.chambreConfigId || 0,
                         chambreNom: chambreFormData.chambreNom || "",
-                        etatChambre: chambreFormData.etatChambre || ChambreStatus.DISPONIBLE
+                        etatChambre: chambreFormData.etatChambre || "DISPONIBLE"
                     }
                 })).unwrap();
-                displayNotification({
-                    type: "success",
-                    content: "Chambre mise à jour avec succès"
-                });
+                setNotification({ type: 'success', content: 'Chambre mise à jour avec succès' });
             } else {
                 await dispatch(createChambre({
                     chambreConfigId: chambreFormData.chambreConfigId || 0,
                     chambreNom: chambreFormData.chambreNom || "",
-                    etatChambre: chambreFormData.etatChambre || ChambreStatus.DISPONIBLE
+                    etatChambre: chambreFormData.etatChambre || "DISPONIBLE"
                 })).unwrap();
-                displayNotification({
-                    type: "success",
-                    content: "Chambre créée avec succès"
-                });
+                setNotification({ type: 'success', content: 'Chambre créée avec succès' });
             }
             setIsModalOpen(false);
-            setChambreFormData(initialiseChambre);
             setSelectedChambre(null);
+            setChambreFormData(initialiseChambre);
         } catch (error) {
-            displayNotification({
-                type: "error",
-                content: "Une erreur est survenue"
-            });
+            setNotification({ type: 'error', content: 'Une erreur est survenue' });
         } finally {
             setIsSaving(false);
         }
     };
 
     const handleDeleteConfirm = async () => {
-        if (selectedChambre?.chambreId) {
+        if (!selectedChambre) return;
+        try {
             setIsDeleting(true);
-            try {
-                await dispatch(deleteChambre(selectedChambre.chambreId)).unwrap();
-                displayNotification({
-                    type: "success",
-                    content: "Chambre supprimée avec succès"
-                });
-                setIsDeleteModalOpen(false);
-                setSelectedChambre(null);
-            } catch (error) {
-                displayNotification({
-                    type: "error",
-                    content: "Une erreur est survenue lors de la suppression"
-                });
-            } finally {
-                setIsDeleting(false);
-            }
+            await dispatch(deleteChambre(selectedChambre.chambreId)).unwrap();
+            setNotification({ type: 'success', content: 'Chambre supprimée avec succès' });
+            setIsDeleteModalOpen(false);
+            setSelectedChambre(null);
+        } catch (error) {
+            setNotification({ type: 'error', content: 'Une erreur est survenue lors de la suppression' });
+        } finally {
+            setIsDeleting(false);
         }
     };
 
+    useEffect(() => {
+        dispatch(fetchAllChambres());
+        dispatch(fetchAllConfigChambres());
+        dispatch(fetchAllResidences());
+    }, [dispatch]);
+
     return {
-        chambres,
+        chambres: filteredChambres,
         configChambres,
+        residences,
         loading,
         error,
         isModalOpen,
@@ -178,6 +168,19 @@ export const useChambres = () => {
         errors,
         isSaving,
         isDeleting,
+        searchTerm,
+        setSearchTerm,
+        residenceFilter,
+        setResidenceFilter,
+        statusFilter,
+        setStatusFilter,
+        tabsData,
+        pageIndex,
+        setPageIndex,
+        pageCount,
+        itemsPerPage,
+        startIndex,
+        endIndex,
         handleInputChange,
         handleSelectChange,
         handleEdit,

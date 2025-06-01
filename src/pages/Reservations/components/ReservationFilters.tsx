@@ -5,6 +5,7 @@ import Lucide from '../../../base-components/Lucide';
 import { formatCurrency } from '../../../utils/functions';
 import { FormInput, FormSelect } from '../../../base-components/Form';
 import Litepicker from '../../../base-components/Litepicker';
+import Button from '../../../base-components/Button';
 
 interface ReservationFiltersProps {
     residences: Residence[];
@@ -49,6 +50,16 @@ const ReservationFilters: React.FC<ReservationFiltersProps> = ({
     setGuestsRange,
     onExport,
 }) => {
+    const resetFilters = () => {
+        setSearchTerm('');
+        setResidenceFilter('all');
+        setStatusFilter('all');
+        setDateRange({ start: '', end: '' });
+        setPriceRange({ min: 0, max: 0 });
+        setNightsRange({ min: 0, max: 0 });
+        setGuestsRange({ min: 0, max: 0 });
+    };
+
     return (
         <div className="intro-y mt-4">
             {/* En-tête avec titre et bouton d'export */}
@@ -72,29 +83,25 @@ const ReservationFilters: React.FC<ReservationFiltersProps> = ({
                     <div className="pr-1 intro-y">
                         <div className="p-1 box">
                             <Tab.List variant="pills">
-
-                                {
-                                    tabsData.map((item) => (
-                                        <Tab key={item.id}>
-                                            <Tab.Button
-                                                className={`flex text-xs items-center sm:px-4 py-2 sm:text-sm rounded-lg ${statusFilter === item.id ? 'bg-primary text-white' : ''}`}
-                                                as="button"
-                                                onClick={() => setStatusFilter(item.id)}
-                                            >
-                                                <span className="truncate">{item.label}</span>
-                                                <span className="ml-2 sm:block hidden bg-white/20 px-2 py-0.5 rounded-full text-xs">
-                                                    {item.count}
-                                                </span>
-                                            </Tab.Button>
-                                        </Tab>
-                                    ))
-                                }
+                                {tabsData.map((item) => (
+                                    <Tab key={item.id}>
+                                        <Tab.Button
+                                            className={`flex text-xs items-center sm:px-4 py-2 sm:text-sm rounded-lg ${statusFilter === item.id ? 'bg-primary text-white' : ''}`}
+                                            as="button"
+                                            onClick={() => setStatusFilter(item.id)}
+                                        >
+                                            <span className="truncate">{item.label}</span>
+                                            <span className="ml-2 sm:block hidden bg-white/20 px-2 py-0.5 rounded-full text-xs">
+                                                {item.count}
+                                            </span>
+                                        </Tab.Button>
+                                    </Tab>
+                                ))}
                             </Tab.List>
                         </div>
                     </div>
                 </Tab.Group>
             </div>
-
 
             {/* Filtres */}
             <div className="hidden sm:grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 p-4 bg-slate-50 rounded-lg ">
@@ -108,19 +115,28 @@ const ReservationFilters: React.FC<ReservationFiltersProps> = ({
                     />
                 </div>
 
-                {/* Sélecteur de résidence */}
-                <div>
-                    <FormSelect
-                        value={residenceFilter}
-                        onChange={(e) => setResidenceFilter(e.target.value)}
+                {/* Sélecteur de résidence et bouton vider */}
+                <div className="flex gap-2">
+                    <div className="flex-1">
+                        <FormSelect
+                            value={residenceFilter}
+                            onChange={(e) => setResidenceFilter(e.target.value)}
+                        >
+                            <option value="all">Toutes les résidences</option>
+                            {residences.map((residence) => (
+                                <option key={residence.residenceId} value={residence.residenceId}>
+                                    {residence.residenceNom}
+                                </option>
+                            ))}
+                        </FormSelect>
+                    </div>
+                    <button
+                        onClick={resetFilters}
+                        className="flex btn btn-outline-secondary whitespace-nowrap"
                     >
-                        <option value="all">Toutes les résidences</option>
-                        {residences.map((residence) => (
-                            <option key={residence.residenceId} value={residence.residenceId}>
-                                {residence.residenceNom}
-                            </option>
-                        ))}
-                    </FormSelect>
+                        <Lucide icon="RefreshCw" className="w-4 h-4 mr-2" />
+                        Vider
+                    </button>
                 </div>
 
                 {/* Filtre par dates */}
@@ -132,7 +148,7 @@ const ReservationFilters: React.FC<ReservationFiltersProps> = ({
                                 value={dateRange.start}
                                 onChange={(date) => setDateRange({ ...dateRange, start: date })}
                                 options={{
-                                    format: 'YYYY-MM-DD',
+                                    format: 'DD/MM/YYYY',
                                     singleMode: true,
                                     lang: 'fr-FR',
                                 }}
@@ -146,7 +162,7 @@ const ReservationFilters: React.FC<ReservationFiltersProps> = ({
                                 value={dateRange.end}
                                 onChange={(date) => setDateRange({ ...dateRange, end: date })}
                                 options={{
-                                    format: 'YYYY-MM-DD',
+                                    format: 'DD/MM/YYYY',
                                     singleMode: true,
                                     lang: 'fr-FR',
                                 }}

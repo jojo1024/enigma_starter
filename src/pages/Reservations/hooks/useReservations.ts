@@ -4,7 +4,6 @@ import { fetchAllReservations, selectAllReservations, updateReservationStatus } 
 import { IReservation } from '../../../services/reservation.service';
 import { AppDispatch } from '../../../stores/store';
 import { fetchAllResidences, selectAllResidences } from '../../../stores/slices/residenceSlice';
-import { Residence } from '../../../schema/residence.schema';
 
 interface UseReservationsProps {
     dateRange: { start: string; end: string };
@@ -21,6 +20,7 @@ export const useReservations = ({
 }: UseReservationsProps) => {
     const dispatch = useAppDispatch() as AppDispatch;
     const reservations = useAppSelector(selectAllReservations);
+    console.log("🚀 ~ reservations:", reservations.length)
     const residences = useAppSelector(selectAllResidences);
     const [isLoading, setIsLoading] = useState(false);
     const [searchTerm, setSearchTerm] = useState("");
@@ -36,10 +36,6 @@ export const useReservations = ({
 
 
     const [pageIndex, setPageIndex] = useState(0);
-    const itemsPerPage = 10;
-    const pageCount = Math.ceil(reservations.length / itemsPerPage);
-    const startIndex = pageIndex * itemsPerPage;
-    const endIndex = pageIndex * itemsPerPage + itemsPerPage;
 
     useEffect(() => {
         const loadData = async () => {
@@ -86,10 +82,10 @@ export const useReservations = ({
                 .filter(reservation => {
                     const searchLower = searchTerm.toLowerCase().trim();
                     const matchesSearch = !searchTerm || 
-                        reservation.clientNom.toLowerCase().includes(searchLower) ||
-                        reservation.clientEmail.toLowerCase().includes(searchLower) ||
-                        reservation.clientTelephone.includes(searchTerm);
-
+                        (reservation.clientNom && reservation.clientNom.toLowerCase().includes(searchLower)) ||
+                        (reservation.clientEmail && reservation.clientEmail.toLowerCase().includes(searchLower)) ||
+                        (reservation.clientTelephone && reservation.clientTelephone.includes(searchTerm));
+                    
                     const matchesStatus = statusFilter === "all" || reservation.reservationStatut === statusFilter;
                     const matchesResidence = residenceFilter === "all" || reservation.residenceId.toString() === residenceFilter;
 
@@ -126,6 +122,13 @@ export const useReservations = ({
         }
     }, [reservations, searchTerm, statusFilter, residenceFilter, dateRange, priceRange, nightsRange, guestsRange]);
 
+    const itemsPerPage = 12;
+    const pageCount = Math.ceil(filteredReservations.length / itemsPerPage);
+    const startIndex = pageIndex * itemsPerPage;
+    const endIndex = pageIndex * itemsPerPage + itemsPerPage;
+
+
+    console.log("🚀 ~ filteredReservations:", filteredReservations.length)
     // Calculer les statistiques pour les onglets
     const tabsData = useMemo(() => [
         { id: 'all', label: 'Toutes', count: reservations.length },
@@ -202,6 +205,32 @@ export const useReservations = ({
         setShowCancelModal(true);
     }, [canCancelReservation]);
 
+    const getEtatReservationLabel = (etat: string) => {
+        switch (etat) {
+            case "confirmee":
+                return 'Confirmée';
+            case "en_attente":
+                return 'En attente';
+            case "annulee":
+                return 'Annulée';
+            default:
+                return 'Inconnu';
+        }
+    };
+
+    const getEtatReservationClass = (etat: string) => {
+        switch (etat) {
+            case "confirmee":
+                return 'bg-green-100 text-green-800';
+            case "en_attente":
+                return 'bg-red-100 text-red-800';
+            case "annulee":
+                return 'bg-yellow-100 text-yellow-800';
+            default:
+                return 'text-gray-500';
+        }
+    };
+
     return {
         isLoading,
         error,
@@ -225,12 +254,13 @@ export const useReservations = ({
         residences,
         tabsData,
         filteredReservations,
-
         pageIndex,
         setPageIndex,
         pageCount,
         itemsPerPage,
         endIndex,
-        startIndex
+        startIndex,
+        getEtatReservationLabel,
+        getEtatReservationClass
     };
 }; 

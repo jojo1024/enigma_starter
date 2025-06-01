@@ -21,9 +21,9 @@ const ChambreForm: React.FC<ChambreFormProps> = ({
   message
 }) => {
   const etatChambreOptions = [
-    { id: ChambreStatus.DISPONIBLE, nom: 'Disponible' },
-    { id: ChambreStatus.OCCUPEE, nom: 'Occupée' },
-    { id: ChambreStatus.MAINTENANCE, nom: 'En maintenance' }
+    { etatChambre: "DISPONIBLE", etatChambreNom: 'DISPONIBLE' },
+    { etatChambre: "OCCUPEE", etatChambreNom: 'OCCUPEE' },
+    { etatChambre: "MAINTENANCE", etatChambreNom: 'MAINTENANCE' }
   ];
   console.log("🚀 ~ etatChambreOptions:", etatChambreOptions)
 
@@ -42,18 +42,6 @@ const ChambreForm: React.FC<ChambreFormProps> = ({
           error={errors.chambreNom}
         />
 
-        {/* <CustomSelect
-          label="Résidence"
-          data={residences}
-          keys={["residenceId", "residenceNom"]}
-          onChange={handleSelectChange}
-          id="residenceId"
-          valuesSelected={chambre.residenceId || 0}
-          required
-          error={errors.residenceId}
-          className="mb-2"
-        /> */}
-
         <CustomSelect
           label="Configuration de la chambre"
           data={configChambres}
@@ -69,10 +57,10 @@ const ChambreForm: React.FC<ChambreFormProps> = ({
         <CustomSelect
           label="État de la chambre"
           data={etatChambreOptions}
-          keys={["id", "nom"]}
+          keys={["etatChambre", "etatChambreNom"]}
           onChange={handleSelectChange}
           id="etatChambre"
-          valuesSelected={chambre.etatChambre || ChambreStatus.DISPONIBLE}
+          valuesSelected={chambre.etatChambre || "DISPONIBLE"}
           className="mb-2"
         />
       </div>

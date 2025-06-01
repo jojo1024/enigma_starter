@@ -26,7 +26,7 @@ export const useChambres = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedResidence, setSelectedResidence] = useState<number | null>(null);
     const [selectedType, setSelectedType] = useState<number | null>(null);
-    const [selectedStatus, setSelectedStatus] = useState<ChambreStatus | null>(null);
+    const [selectedStatus, setSelectedStatus] = useState<"DISPONIBLE" | "OCCUPEE" | "MAINTENANCE">("DISPONIBLE");
     const [isSaving, setIsSaving] = useState(false);
 
     const [pageIndex, setPageIndex] = useState(0);

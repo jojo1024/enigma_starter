@@ -32,7 +32,7 @@ const CustomSelect: React.FC<CustomMultipleSelectProps> = ({
 }) => {
     const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
         const value = e.target.value;
-        onChange({ id: id, value: parseInt(value) || 0 });
+        onChange({ id: id, value });
     };
 
     return (

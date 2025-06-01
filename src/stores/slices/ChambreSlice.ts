@@ -108,11 +108,12 @@ const chambreSlice = createSlice({
                 state.loading = true;
                 state.error = null;
             })
-            .addCase(updateChambre.fulfilled, (state, action) => {
+            .addCase(updateChambre.fulfilled, (state, action:any) => {
+                console.log("🚀 ~ .addCase ~ action.payload:", action.payload)
                 state.loading = false;
-                const index = state.chambres.findIndex(chambre => chambre.chambreId === action.payload.chambreId);
+                const index = state.chambres.findIndex(chambre => chambre.chambreId === action.payload?.data[0]?.chambreId);
                 if (index !== -1) {
-                    state.chambres[index] = action.payload;
+                    state.chambres[index] = {...state.chambres[index], ...action.payload?.data[0]};
                 }
             })
             .addCase(updateChambre.rejected, (state, action) => {

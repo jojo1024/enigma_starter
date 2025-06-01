@@ -29,27 +29,27 @@ const ChambreTable: React.FC<ChambreTableProps> = ({
 }) => {
     const [viewMode, setViewMode] = useState<'list' | 'card'>('list');
 
-    const getEtatChambreLabel = (etat: ChambreStatus) => {
+    const getEtatChambreLabel = (etat: string) => {
         switch (etat) {
-            case ChambreStatus.DISPONIBLE:
+            case "DISPONIBLE":
                 return 'Disponible';
-            case ChambreStatus.OCCUPEE:
+            case "OCCUPEE":
                 return 'Occupée';
-            case ChambreStatus.MAINTENANCE:
+            case "MAINTENANCE":
                 return 'En maintenance';
             default:
                 return 'Inconnu';
         }
     };
 
-    const getEtatChambreClass = (etat: ChambreStatus) => {
+    const getEtatChambreClass = (etat: string) => {
         switch (etat) {
-            case ChambreStatus.DISPONIBLE:
-                return 'text-success';
-            case ChambreStatus.OCCUPEE:
-                return 'text-danger';
-            case ChambreStatus.MAINTENANCE:
-                return 'text-warning';
+            case "DISPONIBLE":
+                return 'bg-green-100 text-green-800';
+            case "OCCUPEE":
+                return 'bg-red-100 text-red-800';
+            case "MAINTENANCE":
+                return 'bg-yellow-100 text-yellow-800';
             default:
                 return 'text-gray-500';
         }
@@ -64,8 +64,8 @@ const ChambreTable: React.FC<ChambreTableProps> = ({
             visible: true,
             className: '',
             renderCell: (value: any, row: IChambre) => (
-                <span className={getEtatChambreClass(row.etatChambre)}>
-                    {getEtatChambreLabel(row.etatChambre)}
+                <span className={`px-2 py-1 rounded-full text-xs ${getEtatChambreClass(row.etatChambre.toString())}`}>
+                    {getEtatChambreLabel(row.etatChambre.toString())}
                 </span>
             )
         },

@@ -54,14 +54,18 @@ const Reservations: React.FC = () => {
     setPageIndex,
     pageCount,
     itemsPerPage,
+    filteredReservations,
     endIndex,
-    startIndex
+    startIndex,
+    getEtatReservationLabel,
+    getEtatReservationClass
   } = useReservations({
     dateRange,
     priceRange,
     nightsRange,
     guestsRange,
   });
+  console.log("🚀 ~kkkkkk filteredReservations:", filteredReservations.length)
 
   const showNotification = () => notificationRef.current?.showToast();
 
@@ -162,15 +166,15 @@ const Reservations: React.FC = () => {
   };
 
   // Ajout d'un useEffect pour gérer les notifications d'annulation
-  useEffect(() => {
-    if (showCancelModal === false && selectedReservation === null) {
-      // La modal a été fermée après une annulation réussie
-      displayNotification({
-        type: "success",
-        content: "La réservation a été annulée avec succès"
-      });
-    }
-  }, [showCancelModal, selectedReservation]);
+  // useEffect(() => {
+  //   if (showCancelModal === false && selectedReservation === null) {
+  //     // La modal a été fermée après une annulation réussie
+  //     displayNotification({
+  //       type: "success",
+  //       content: "La réservation a été annulée avec succès"
+  //     });
+  //   }
+  // }, [showCancelModal, selectedReservation]);
 
   const columns: TableColumn<IReservation>[] = [
     { header: 'Client', accessor: 'clientNom', visible: true },
@@ -193,30 +197,13 @@ const Reservations: React.FC = () => {
       header: 'Statut',
       accessor: 'reservationStatut',
       renderCell: (value: string) => (
-        <span className={`px-2 py-1 rounded-full text-xs ${value === 'confirmee'
-          ? 'bg-green-100 text-green-800'
-          : value === 'annulee'
-            ? 'bg-red-100 text-red-800'
-            : 'bg-yellow-100 text-yellow-800'
-          }`}>
-          {value}
+        <span className={`px-2 py-1 rounded-full text-xs ${getEtatReservationClass(value)}`}>
+          {getEtatReservationLabel(value)}
         </span>
       ),
       width: '120px',
       tableTextPosition: 'text-center'
     },
-    // {
-    //   header: 'Dates',
-    //   visible: true,
-    //   renderCell: (value: any, row: IReservation) => (
-    //     <div className="text-center">
-    //       <div>{formatDate(new Date(row.reservationDateArrivee))}</div>
-    //       <div className="text-xs text-slate-500">au</div>
-    //       <div>{formatDate(new Date(row.reservationDateDepart))}</div>
-    //       <div className="text-xs text-slate-500">{row.reservationNuit} nuits</div>
-    //     </div>
-    //   )
-    // },
     {
       header: 'Prix total',
       accessor: 'reservationPrixTotal',
@@ -293,20 +280,13 @@ const Reservations: React.FC = () => {
 
           {viewMode === 'card' && (
             <div className="flex items-center gap-2">
-              {/* <span className="text-slate-500">
-                {((currentPage - 1) * 18) + 1} - {Math.min(currentPage * 18, paginatedReservations.length)} sur {paginatedReservations.length}
-              </span> */}
-              {/* <ReservationPagination
-                currentPage={currentPage}
-                totalPages={totalPages}
-                onPageChange={setCurrentPage}
-              /> */}
+              <div>Total: {filteredReservations.length}</div>
               {setPageIndex && pageCount > 1 && (
                 <div className='flex mr-2 justify-end items-center mt-3'>
                   <Pagination
                     pageIndex={pageIndex}
                     setPageIndex={setPageIndex}
-                    pageCount={totalPages}
+                    pageCount={pageCount}
                   />
                 </div>
               )}
@@ -365,7 +345,7 @@ const Reservations: React.FC = () => {
           </div>
         ) : viewMode === 'card' ? (
           <div className="grid grid-cols-12 gap-6">
-            {paginatedReservations.slice(startIndex, endIndex).map((reservation) => (
+            {filteredReservations.slice(startIndex, endIndex).map((reservation) => (
               <div key={reservation.reservationId} className="col-span-12 sm:col-span-6 lg:col-span-4 2xl:col-span-3">
                 <div className="h-full flex flex-col">
                   <ReservationCard
@@ -383,7 +363,7 @@ const Reservations: React.FC = () => {
         ) : (
           <div className={`w-full overflow-x-auto hide-scrollbar mt-4 intro-x box`}>
             <CustomDataTable
-              data={paginatedReservations}
+              data={filteredReservations}
               columns={columns}
               rowKey={(row) => String(row.reservationId)}
               selectedRows={[]}
@@ -395,7 +375,7 @@ const Reservations: React.FC = () => {
               startIndex={startIndex}
               pageIndex={pageIndex}
               setPageIndex={setPageIndex}
-              pageCount={totalPages}
+              pageCount={pageCount}
               loading={isLoading}
               noDataMessage="Aucune réservation trouvée"
               search={searchTerm}
@@ -552,6 +532,15 @@ const Reservations: React.FC = () => {
         notificationRef={notificationRef}
         title="Info"
         type={notification?.type}
+      />
+
+      {/* Modal d'annulation */}
+      <CancelReservationModal
+        isOpen={showCancelModal}
+        onClose={() => setShowCancelModal(false)}
+        onConfirm={handleCancelReservation}
+        reservation={selectedReservation}
+        isLoading={isLoading}
       />
     </>
   );

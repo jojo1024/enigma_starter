@@ -84,10 +84,10 @@ const CustomDataTable = <T,>({
 
   // Fonction qui vérifie si une ligne (row) est sélectionnée
   const isRowSelected = (item: T) => selectedRows.some(selectedItem => rowKey(selectedItem) === rowKey(item));
-  
+
   // Fonction qui vérifie si toutes les lignes (row) sont sélectionnées
   const allRowsSelected = data.length > 0 && data.every(row => isRowSelected(row));
-  
+
   // Fonction qui vérifie si au moins une ligne (row) est sélectionnée
   const isAnyRowSelected = selectedRows.length > 0;
 
@@ -113,7 +113,7 @@ const CustomDataTable = <T,>({
     newVisibleColumns[index].visible = !newVisibleColumns[index].visible;
     setVisibleColumns(newVisibleColumns);
   };
-  
+
   // Handle page change
   const handlePageChange = (newPage: number) => {
     if (setPageIndex && newPage >= 0 && newPage < pageCount) {
@@ -138,7 +138,7 @@ const CustomDataTable = <T,>({
                 Supprimer ({selectedRows.length})
               </Button>
             )}
-            
+
             <div className='ml-3 my-1 text-sm'>
               Total: <span className='mr-5 font-bold'>{data?.length}</span>
               {isAnyRowSelected && (
@@ -146,29 +146,29 @@ const CustomDataTable = <T,>({
               )}
             </div>
 
-               {/* Pagination */}
-      {setPageIndex && pageCount > 1 && (
-        <div className='flex mr-2 justify-end items-center mt-3'>
-          <Pagination
-            pageIndex={pageIndex}
-            setPageIndex={setPageIndex}
-            pageCount={pageCount}
-          />
-        </div>
-      )}
+            {/* Pagination */}
+            {setPageIndex && pageCount > 1 && (
+              <div className='flex mr-2 justify-end items-center mt-3'>
+                <Pagination
+                  pageIndex={pageIndex}
+                  setPageIndex={setPageIndex}
+                  pageCount={pageCount}
+                />
+              </div>
+            )}
           </div>
-          
+
           <div className="flex items-center">
-            
+
             <Button
               variant="outline-secondary"
               size="sm"
               onClick={() => setShowColumnSettings(!showColumnSettings)}
             >
               <Lucide icon="Columns" className="w-4 h-4 mr-1" />
-              Colonnes
+              Colonnesss
             </Button>
-            
+
             {/* Menu des colonnes */}
             {showColumnSettings && (
               <div className="absolute right-0 top-12 mt-2 w-56 bg-white dark:bg-gray-800 rounded-md shadow-lg z-10 border border-gray-200 dark:border-gray-700">
@@ -221,7 +221,7 @@ const CustomDataTable = <T,>({
                   </FormCheck>
                 </th>
               )}
-              
+
               {visibleColumns.map((column, index) => (
                 column.visible !== false && (
                   <th
@@ -239,7 +239,7 @@ const CustomDataTable = <T,>({
               ))}
             </tr>
           </thead>
-          
+
           <tbody>
             {loading ? (
               <tr>
@@ -291,7 +291,7 @@ const CustomDataTable = <T,>({
                         </div>
                       </td>
                     )}
-                    
+
                     {visibleColumns.map((column, colIndex) => (
                       column.visible !== false && (
                         <td
@@ -301,14 +301,14 @@ const CustomDataTable = <T,>({
                         >
                           {(column.renderCell
                             ? column.renderCell(
-                                column.accessor ? (isSelected ? selectedRows.find(r => rowKey(r) === rowKey(row))?.[column.accessor] : row[column.accessor]) : null,
-                                row,
-                                column.accessor
-                                  ? (newValue: any) => handleInputChange(rowKey(row), column.accessor!, newValue)
-                                  : () => { }
-                              )
-                            : column.accessor 
-                              ? row[column.accessor] 
+                              column.accessor ? (isSelected ? selectedRows.find(r => rowKey(r) === rowKey(row))?.[column.accessor] : row[column.accessor]) : null,
+                              row,
+                              column.accessor
+                                ? (newValue: any) => handleInputChange(rowKey(row), column.accessor!, newValue)
+                                : () => { }
+                            )
+                            : column.accessor
+                              ? row[column.accessor]
                               : null) as React.ReactNode}
                         </td>
                       )
@@ -321,7 +321,7 @@ const CustomDataTable = <T,>({
         </table>
       </div>
 
-   
+
     </div>
   );
 };
