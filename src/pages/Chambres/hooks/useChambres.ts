@@ -22,6 +22,34 @@ const initialiseChambre: Partial<IChambre> = {
     residenceId: 0
 };
 
+const validateChambreData = (data: Partial<IChambre>, chambres: IChambre[], selectedChambre: IChambre | null): { isValid: boolean; errors: { [key: string]: string } } => {
+    const errors: { [key: string]: string } = {};
+    
+    if (!data.chambreNom || data.chambreNom.trim() === '') {
+        errors.chambreNom = 'Le nom de la chambre est requis';
+    } else {
+        // Vérification de la duplication du nom
+        const isDuplicate = chambres.some(chambre => 
+            chambre.chambreNom.toLowerCase() === data.chambreNom?.toLowerCase() && 
+            (!selectedChambre || chambre.chambreId !== selectedChambre.chambreId)
+        );
+        
+        if (isDuplicate) {
+            errors.chambreNom = 'Ce nom de chambre existe déjà';
+        }
+    }
+    
+    if (!data.chambreConfigId || data.chambreConfigId === 0) {
+        errors.chambreConfigId = 'La configuration de la chambre est requise';
+    }
+
+    
+    return {
+        isValid: Object.keys(errors).length === 0,
+        errors
+    };
+};
+
 export const useChambres = () => {
     const dispatch = useAppDispatch();
     const chambres = useAppSelector(selectAllChambres);
@@ -50,6 +78,16 @@ export const useChambres = () => {
     const [message, setMessage] = useState('');
     const notificationRef = useRef<NotificationElement>();
     const [notification, setNotification] = useState<INotification | undefined>();
+
+    // Fonction pour afficher la notification
+    const showNotification = () => notificationRef.current?.showToast();
+
+    const displayNotification = (notification: INotification) => {
+        setNotification(notification);
+        setTimeout(() => {
+            showNotification();
+        }, 30);
+    };
 
     // Filtrage des chambres
     const filteredChambres = useMemo(() => {
@@ -103,45 +141,135 @@ export const useChambres = () => {
 
     const onSubmit = async () => {
         try {
+            // Validation des données avec vérification de duplication
+            const validation = validateChambreData(chambreFormData, chambres, selectedChambre);
+            if (!validation.isValid) {
+                setErrors(validation.errors);
+                displayNotification({ 
+                    type: 'error', 
+                    content: 'Veuillez corriger les erreurs dans le formulaire' 
+                });
+                return;
+            }
+
             setIsSaving(true);
             if (selectedChambre) {
-                await dispatch(updateChambre({
-                    chambreId: selectedChambre.chambreId,
-                    chambre: {
+                try {
+                    const result = await dispatch(updateChambre({
+                        chambreId: selectedChambre.chambreId,
+                        chambre: {
+                            chambreConfigId: chambreFormData.chambreConfigId || 0,
+                            chambreNom: chambreFormData.chambreNom || "",
+                            etatChambre: chambreFormData.etatChambre || "DISPONIBLE"
+                        }
+                    })).unwrap();
+                    
+                    if (result) {
+                        displayNotification({ 
+                            type: 'success', 
+                            content: 'Chambre mise à jour avec succès' 
+                        });
+                        setIsModalOpen(false);
+                        setSelectedChambre(null);
+                        setChambreFormData(initialiseChambre);
+                    } else {
+                        throw new Error('La mise à jour a échoué');
+                    }
+                } catch (error: any) {
+                    const errorMessage = error?.message || 'Erreur lors de la mise à jour de la chambre';
+                    displayNotification({ 
+                        type: 'error', 
+                        content: errorMessage
+                    });
+                    throw error;
+                }
+            } else {
+                try {
+                    const createData = {
                         chambreConfigId: chambreFormData.chambreConfigId || 0,
                         chambreNom: chambreFormData.chambreNom || "",
-                        etatChambre: chambreFormData.etatChambre || "DISPONIBLE"
+                        etatChambre: chambreFormData.etatChambre || "DISPONIBLE",
+                        residenceId: chambreFormData.residenceId || 0
+                    };
+
+                    const result = await dispatch(createChambre(createData)).unwrap();
+                    
+                    if (result) {
+                        displayNotification({ 
+                            type: 'success', 
+                            content: 'Chambre créée avec succès' 
+                        });
+                        setIsModalOpen(false);
+                        setSelectedChambre(null);
+                        setChambreFormData(initialiseChambre);
+                    } else {
+                        throw new Error('La création a échoué');
                     }
-                })).unwrap();
-                setNotification({ type: 'success', content: 'Chambre mise à jour avec succès' });
-            } else {
-                await dispatch(createChambre({
-                    chambreConfigId: chambreFormData.chambreConfigId || 0,
-                    chambreNom: chambreFormData.chambreNom || "",
-                    etatChambre: chambreFormData.etatChambre || "DISPONIBLE"
-                })).unwrap();
-                setNotification({ type: 'success', content: 'Chambre créée avec succès' });
+                } catch (error: any) {
+                    console.log("🚀 ~ onSubmit ~ error:", error)
+                    const errorMessage = error?.message || 'Erreur lors de la création de la chambre';
+                    displayNotification({ 
+                        type: 'error', 
+                        content: errorMessage
+                    });
+                    throw error;
+                }
             }
-            setIsModalOpen(false);
-            setSelectedChambre(null);
-            setChambreFormData(initialiseChambre);
-        } catch (error) {
-            setNotification({ type: 'error', content: 'Une erreur est survenue' });
+        } catch (error: any) {
+            const errorMessage = error?.message || 'Une erreur est survenue lors de l\'opération';
+            displayNotification({ 
+                type: 'error', 
+                content: errorMessage
+            });
         } finally {
             setIsSaving(false);
         }
+    };
+
+    // Fonction pour réinitialiser le formulaire
+    const resetForm = () => {
+        setChambreFormData(initialiseChambre);
+        setErrors({});
+        setSelectedChambre(null);
+    };
+
+    // Fonction pour ouvrir le modal d'ajout
+    const handleAddClick = () => {
+        resetForm();
+        setIsModalOpen(true);
     };
 
     const handleDeleteConfirm = async () => {
         if (!selectedChambre) return;
         try {
             setIsDeleting(true);
-            await dispatch(deleteChambre(selectedChambre.chambreId)).unwrap();
-            setNotification({ type: 'success', content: 'Chambre supprimée avec succès' });
-            setIsDeleteModalOpen(false);
-            setSelectedChambre(null);
-        } catch (error) {
-            setNotification({ type: 'error', content: 'Une erreur est survenue lors de la suppression' });
+            try {
+                const result = await dispatch(deleteChambre(selectedChambre.chambreId)).unwrap();
+                
+                if (result) {
+                    displayNotification({ 
+                        type: 'success', 
+                        content: 'Chambre supprimée avec succès' 
+                    });
+                    setIsDeleteModalOpen(false);
+                    setSelectedChambre(null);
+                } else {
+                    throw new Error('La suppression a échoué');
+                }
+            } catch (error: any) {
+                const errorMessage = error?.message || 'Erreur lors de la suppression de la chambre';
+                displayNotification({ 
+                    type: 'error', 
+                    content: errorMessage
+                });
+                throw error;
+            }
+        } catch (error: any) {
+            const errorMessage = error?.message || 'Une erreur est survenue lors de la suppression';
+            displayNotification({ 
+                type: 'error', 
+                content: errorMessage
+            });
         } finally {
             setIsDeleting(false);
         }
@@ -152,6 +280,10 @@ export const useChambres = () => {
         dispatch(fetchAllConfigChambres());
         dispatch(fetchAllResidences());
     }, [dispatch]);
+
+    useEffect(() => {
+        setPageIndex(0);
+    }, [searchTerm, statusFilter, residenceFilter]);
 
     return {
         chambres: filteredChambres,
@@ -191,6 +323,7 @@ export const useChambres = () => {
         setIsDeleteModalOpen,
         setChambreFormData,
         setSelectedChambre,
-        notificationRef
+        notificationRef,
+        handleAddClick
     };
 }; 

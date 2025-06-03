@@ -4,6 +4,7 @@ import { fetchAllReservations, selectAllReservations, updateReservationStatus } 
 import { IReservation } from '../../../services/reservation.service';
 import { AppDispatch } from '../../../stores/store';
 import { fetchAllResidences, selectAllResidences } from '../../../stores/slices/residenceSlice';
+import { selectConnectionInfo } from '../../../stores/slices/appSlice';
 
 interface UseReservationsProps {
     dateRange: { start: string; end: string };
@@ -20,16 +21,18 @@ export const useReservations = ({
 }: UseReservationsProps) => {
     const dispatch = useAppDispatch() as AppDispatch;
     const reservations = useAppSelector(selectAllReservations);
+    const connectionInfo = useAppSelector(selectConnectionInfo);
     console.log("🚀 ~ reservations:", reservations.length)
     const residences = useAppSelector(selectAllResidences);
     const [isLoading, setIsLoading] = useState(false);
     const [searchTerm, setSearchTerm] = useState("");
     const [statusFilter, setStatusFilter] = useState("all");
     const [residenceFilter, setResidenceFilter] = useState("all");
+    console.log("🚀 ~ residenceFilter:", residenceFilter)
     const [currentPage, setCurrentPage] = useState(1);
     const [error, setError] = useState<string | null>(null);
 
-    const [selectedReservation, setSelectedReservation] = useState<IReservation | null>(null);
+    const [selectedReservationForCancel, setSelectedReservationForCancel] = useState<IReservation | null>(null);
     const [showCancelModal, setShowCancelModal] = useState(false);
 
     const ITEMS_PER_PAGE = 18;
@@ -59,6 +62,7 @@ export const useReservations = ({
     // Réinitialiser la page courante quand les filtres changent
     useEffect(() => {
         setCurrentPage(1);
+        setPageIndex(0);
     }, [searchTerm, statusFilter, residenceFilter, dateRange, priceRange, nightsRange, guestsRange]);
 
     const canCancelReservation = useCallback((reservation: IReservation) => {
@@ -78,7 +82,7 @@ export const useReservations = ({
     // Utiliser useMemo pour optimiser les performances
     const filteredReservations = useMemo(() => {
         try {
-            return reservations
+            let filteredReservations  =  reservations
                 .filter(reservation => {
                     const searchLower = searchTerm.toLowerCase().trim();
                     const matchesSearch = !searchTerm || 
@@ -116,6 +120,10 @@ export const useReservations = ({
                     if (a.reservationStatut !== 'en_attente' && b.reservationStatut === 'en_attente') return 1;
                     return new Date(b.reservationDateCreation).getTime() - new Date(a.reservationDateCreation).getTime();
                 });
+                if(connectionInfo?.roleUtilisateurNom === "ADMIN"){
+                    return filteredReservations
+                }
+                return filteredReservations.filter(reservation => reservation.residenceId === connectionInfo?.residenceId);
         } catch (err) {
             console.error('Erreur lors du filtrage des réservations:', err);
             return [];
@@ -130,12 +138,18 @@ export const useReservations = ({
 
     console.log("🚀 ~ filteredReservations:", filteredReservations.length)
     // Calculer les statistiques pour les onglets
-    const tabsData = useMemo(() => [
-        { id: 'all', label: 'Toutes', count: reservations.length },
-        { id: 'en_attente', label: 'En attente', count: reservations.filter(r => r.reservationStatut === 'en_attente').length },
-        { id: 'confirmee', label: 'Confirmées', count: reservations.filter(r => r.reservationStatut === 'confirmee').length },
-        { id: 'annulee', label: 'Annulées', count: reservations.filter(r => r.reservationStatut === 'annulee').length },
-    ], [reservations]);
+    const tabsData = useMemo(() => {
+        const filteredReservationsByResidence = residenceFilter === 'all' 
+            ? reservations 
+            : reservations.filter(r => r.residenceId.toString() === residenceFilter);
+
+        return [
+            { id: 'all', label: 'Toutes', count: filteredReservationsByResidence.length },
+            { id: 'en_attente', label: 'En attente', count: filteredReservationsByResidence.filter(r => r.reservationStatut === 'en_attente').length },
+            { id: 'confirmee', label: 'Confirmées', count: filteredReservationsByResidence.filter(r => r.reservationStatut === 'confirmee').length },
+            { id: 'annulee', label: 'Annulées', count: filteredReservationsByResidence.filter(r => r.reservationStatut === 'annulee').length },
+        ];
+    }, [reservations, residenceFilter]);
 
     const totalPages = Math.max(1, Math.ceil(filteredReservations.length / ITEMS_PER_PAGE));
     
@@ -177,17 +191,17 @@ export const useReservations = ({
     };
 
     const handleCancelReservation = async () => {
-        if (selectedReservation) {
+        if (selectedReservationForCancel) {
             try {
                 setIsLoading(true);
                 setError(null);
                 await dispatch(updateReservationStatus({
-                    reservationId: selectedReservation.reservationId,
+                    reservationId: selectedReservationForCancel.reservationId,
                     reservationStatut: "annulee",
                     utilisateurId: 13
                 }));
                 setShowCancelModal(false);
-                setSelectedReservation(null);
+                setSelectedReservationForCancel(null);
             } catch (err) {
                 setError("Erreur lors de l'annulation de la réservation");
                 console.error('Erreur lors de l\'annulation:', err);
@@ -201,7 +215,7 @@ export const useReservations = ({
         if (!canCancelReservation(reservation)) {
             return;
         }
-        setSelectedReservation(reservation);
+        setSelectedReservationForCancel(reservation);
         setShowCancelModal(true);
     }, [canCancelReservation]);
 
@@ -223,9 +237,9 @@ export const useReservations = ({
             case "confirmee":
                 return 'bg-green-100 text-green-800';
             case "en_attente":
-                return 'bg-red-100 text-red-800';
-            case "annulee":
                 return 'bg-yellow-100 text-yellow-800';
+            case "annulee":
+                return 'bg-red-100 text-red-800';
             default:
                 return 'text-gray-500';
         }
@@ -242,7 +256,7 @@ export const useReservations = ({
         setResidenceFilter,
         currentPage,
         setCurrentPage: handlePageChange,
-        selectedReservation,
+        selectedReservationForCancel,
         showCancelModal,
         setShowCancelModal,
         paginatedReservations,

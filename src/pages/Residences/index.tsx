@@ -1,17 +1,13 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, RefObject } from 'react';
 import { IReduxState } from '../../stores/store';
 import Button from '../../base-components/Button';
 import { FormInput } from '../../base-components/Form';
 import Lucide from '../../base-components/Lucide';
-import { Residence, CreateResidence, UpdateResidence } from '../../schema/residence.schema';
+import { Residence, ResidenceImage } from '../../schema/residence.schema';
+import { CustomNotification } from '../../components/Notification';
 import { NotificationElement } from '../../base-components/Notification';
-import { CustomNotification, INotification } from '../../components/Notification';
 import {
     fetchAllResidences,
-    createResidence,
-    updateResidence,
-    deleteResidence,
-    activateResidence,
     selectAllResidences,
     selectLoading,
     selectError
@@ -21,6 +17,9 @@ import ResidenceCard from './components/ResidenceCard';
 import ResidenceForm from './components/ResidenceForm';
 import DeleteDialog from './components/DeleteDialog';
 import { useResidenceValidation } from './hooks/useResidenceValidation';
+import { useResidenceManagement } from './hooks/useResidenceManagement';
+import { useImageCarousel } from './hooks/useImageCarousel';
+import { useNotification } from '../../hooks/useNotification';
 import { FormErrors } from './types';
 
 const Residences: React.FC = () => {
@@ -30,37 +29,33 @@ const Residences: React.FC = () => {
     const error = useAppSelector(selectError);
     const { validateForm } = useResidenceValidation();
     const notificationRef = useRef<NotificationElement>();
-    const [notification, setNotification] = useState<INotification | undefined>();
-
-    const showNotification = () => notificationRef.current?.showToast();
-
-    const displayNotification = (notification: INotification) => {
-        setNotification(notification);
-        setTimeout(() => {
-            showNotification();
-        }, 30);
-    };
+    const [notification, setNotification] = useState<{ type: 'success' | 'error', content: string } | undefined>();
+    const { isLoading, isDeleting, isSaving, handleSaveResidence, handleDeleteResidence, handleRestoreResidence } = useResidenceManagement();
+    const { activeImageIndex, handleNextImage, handlePrevImage } = useImageCarousel(residences);
 
     // États
     const [openSlideOver, setOpenSlideOver] = useState(false);
     const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
     const [editMode, setEditMode] = useState(false);
     const [currentResidence, setCurrentResidence] = useState<Residence | null>(null);
-    console.log("🚀 ~ currentResidence:", currentResidence)
     const [searchTerm, setSearchTerm] = useState("");
     const [formErrors, setFormErrors] = useState<FormErrors>({});
     const [selectedResidenceId, setSelectedResidenceId] = useState<number | null>(null);
-    const [activeImageIndex, setActiveImageIndex] = useState<Record<number, number>>({});
-
-    // États de chargement
-    const [isLoading, setIsLoading] = useState(false);
-    const [isDeleting, setIsDeleting] = useState(false);
-    const [isSaving, setIsSaving] = useState(false);
 
     // Charger les résidences au montage du composant
     useEffect(() => {
         dispatch(fetchAllResidences());
     }, [dispatch]);
+
+    // Fonction pour afficher la notification
+    const showNotification = () => notificationRef.current?.showToast();
+
+    const displayNotification = (notification: { type: 'success' | 'error', content: string }) => {
+        setNotification(notification);
+        setTimeout(() => {
+            showNotification();
+        }, 30);
+    };
 
     // Gestionnaires d'événements
     const handleAddResidence = () => {
@@ -69,7 +64,7 @@ const Residences: React.FC = () => {
             residenceId: 0,
             residenceNom: '',
             residenceDescription: '',
-            residenceImages: [],
+            residenceImages: [] as ResidenceImage[],
             residencePrixDeBase: 0,
             residenceTelephone: '+225 ',
             residenceEmail: '',
@@ -93,50 +88,21 @@ const Residences: React.FC = () => {
         setOpenSlideOver(true);
     };
 
-    const handleDeleteResidence = (residenceId: number) => {
+    const handleDeleteClick = (residenceId: number) => {
         setSelectedResidenceId(residenceId);
         setOpenDeleteDialog(true);
     };
 
     const confirmDeleteResidence = async () => {
         if (selectedResidenceId === null) return;
-
-        setIsDeleting(true);
-        try {
-            await dispatch(deleteResidence(selectedResidenceId)).unwrap();
+        const success = await handleDeleteResidence(selectedResidenceId);
+        if (success) {
             displayNotification({
-                type: "success",
-                content: "La résidence a été supprimée avec succès"
+                type: 'success',
+                content: 'Résidence supprimée avec succès'
             });
             setOpenDeleteDialog(false);
             setSelectedResidenceId(null);
-        } catch (error) {
-            console.error('Erreur lors de la suppression:', error);
-            displayNotification({
-                type: "error",
-                content: "Une erreur est survenue lors de la suppression"
-            });
-        } finally {
-            setIsDeleting(false);
-        }
-    };
-
-    const handleRestoreResidence = async (residenceId: number) => {
-        setIsLoading(true);
-        try {
-            await dispatch(activateResidence(residenceId)).unwrap();
-            displayNotification({
-                type: "success",
-                content: "La résidence a été restaurée avec succès"
-            });
-        } catch (error) {
-            console.error('Erreur lors de la restauration:', error);
-            displayNotification({
-                type: "error",
-                content: "Une erreur est survenue lors de la restauration"
-            });
-        } finally {
-            setIsLoading(false);
         }
     };
 
@@ -149,77 +115,28 @@ const Residences: React.FC = () => {
         }
     };
 
-    const handleSaveResidence = async () => {
+    const handleSaveClick = async () => {
         if (!currentResidence) return;
         const errors = validateForm(currentResidence);
         if (Object.keys(errors).length > 0) {
             setFormErrors(errors);
+            displayNotification({
+                type: 'error',
+                content: 'Veuillez corriger les erreurs dans le formulaire'
+            });
             return;
         }
 
-        setIsSaving(true);
-        try {
-            if (editMode) {
-                await dispatch(updateResidence(currentResidence as UpdateResidence)).unwrap();
-                displayNotification({
-                    type: "success",
-                    content: "La résidence a été modifiée avec succès"
-                });
-            } else {
-                await dispatch(createResidence(currentResidence as CreateResidence)).unwrap();
-                displayNotification({
-                    type: "success",
-                    content: "La résidence a été créée avec succès"
-                });
-            }
-        } catch (error) {
-            console.error('Erreur lors de la sauvegarde:', error);
+        const success = await handleSaveResidence(currentResidence, editMode);
+        if (success) {
             displayNotification({
-                type: "error",
-                content: "Une erreur est survenue lors de la sauvegarde"
+                type: 'success',
+                content: editMode ? 'Résidence mise à jour avec succès' : 'Résidence créée avec succès'
             });
-        } finally {
             setOpenSlideOver(false);
             setCurrentResidence(null);
-            setIsSaving(false);
         }
     };
-
-    // Gérer le carousel d'images
-    const handleNextImage = (residenceId: number) => {
-        const residence = residences.find(r => r.residenceId === residenceId);
-        if (!residence?.residenceImages) return;
-
-        const currentIndex = activeImageIndex[residenceId] || 0;
-        const nextIndex = (currentIndex + 1) % residence.residenceImages.length;
-
-        setActiveImageIndex({
-            ...activeImageIndex,
-            [residenceId]: nextIndex
-        });
-    };
-
-    const handlePrevImage = (residenceId: number) => {
-        const residence = residences.find(r => r.residenceId === residenceId);
-        if (!residence?.residenceImages) return;
-
-        const currentIndex = activeImageIndex[residenceId] || 0;
-        const prevIndex = (currentIndex - 1 + residence.residenceImages.length) % residence.residenceImages.length;
-
-        setActiveImageIndex({
-            ...activeImageIndex,
-            [residenceId]: prevIndex
-        });
-    };
-
-    // Initialiser les indices d'image actifs
-    useEffect(() => {
-        const initialIndices: Record<number, number> = {};
-        residences.forEach(residence => {
-            initialIndices[residence.residenceId] = 0;
-        });
-        setActiveImageIndex(initialIndices);
-    }, [residences]);
 
     // Filtrer les résidences selon la recherche
     const filteredResidences = residences.filter(residence =>
@@ -265,7 +182,7 @@ const Residences: React.FC = () => {
                         residence={residence}
                         activeImageIndex={activeImageIndex[residence.residenceId] || 0}
                         onEdit={handleEditResidence}
-                        onDelete={handleDeleteResidence}
+                        onDelete={handleDeleteClick}
                         onRestore={handleRestoreResidence}
                         onNextImage={handleNextImage}
                         onPrevImage={handlePrevImage}
@@ -280,7 +197,7 @@ const Residences: React.FC = () => {
                     editMode={editMode}
                     formErrors={formErrors}
                     onFormChange={handleFormChange}
-                    onSave={handleSaveResidence}
+                    onSave={handleSaveClick}
                     onCancel={() => {
                         if (!isSaving) {
                             setOpenSlideOver(false);
@@ -304,12 +221,14 @@ const Residences: React.FC = () => {
                 isDeleting={isDeleting}
             />
 
-            <CustomNotification
-                message={notification?.content}
-                notificationRef={notificationRef}
-                title={"Info"}
-                type={notification?.type}
-            />
+            {notification && (
+                <CustomNotification
+                    message={notification.content}
+                    notificationRef={notificationRef}
+                    title="Info"
+                    type={notification.type}
+                />
+            )}
         </>
     );
 }

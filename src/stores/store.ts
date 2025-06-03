@@ -15,6 +15,8 @@ import reservationReducer, { ReservationState } from "./slices/reservationSlice"
 import chambreReducer, { ChambreState } from "./slices/ChambreSlice";
 import utilisateurReducer, { UtilisateurState } from "./slices/utilisateurSlice";
 import appReducer, { AppState } from "./slices/appSlice";
+import prestationReducer, { PrestationState } from "./slices/prestationSlice";
+
 export interface IReduxState {
   app: AppState;
   residence: ResidenceState;
@@ -22,6 +24,7 @@ export interface IReduxState {
   reservation: ReservationState;
   chambre: ChambreState;
   utilisateur: UtilisateurState;
+  prestations: PrestationState;
   darkMode: DarkModeState;
   colorScheme: ColorSchemeState;
   sideMenu: SideMenuState;
@@ -36,6 +39,7 @@ const rootReducer = combineReducers({
   reservation: reservationReducer,
   chambre: chambreReducer,
   utilisateur: utilisateurReducer,
+  prestations: prestationReducer,
   darkMode: darkModeReducer,
   colorScheme: colorSchemeReducer,
   sideMenu: sideMenuReducer,

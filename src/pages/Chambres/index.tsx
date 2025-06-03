@@ -1,17 +1,13 @@
-import { useEffect } from 'react';
 import Button from '../../base-components/Button';
 import Lucide from '../../base-components/Lucide';
 import ChambreForm from '../../components/ChambreForm';
+import ChambreFilters from '../../components/chambres/ChambreFilters';
 import ChambreTable from '../../components/chambres/ChambreTable';
 import ConfirmeBox from '../../components/ConfirmeBox';
 import DialogBox from '../../components/DialogBox';
 import { CustomNotification } from '../../components/Notification';
-import { ChambreStatus } from '../../schema/chambre.schema';
-import { fetchAllChambres } from '../../stores/slices/ChambreSlice';
-import { fetchAllConfigChambres } from '../../stores/slices/configChambreSlice';
 import { useAppDispatch } from '../../stores/store';
 import { useChambres } from './hooks/useChambres';
-import ChambreFilters from '../../components/chambres/ChambreFilters';
 
 const Chambres = () => {
     const dispatch = useAppDispatch();
@@ -54,7 +50,8 @@ const Chambres = () => {
         setIsDeleteModalOpen,
         setChambreFormData,
         setSelectedChambre,
-        notificationRef
+        notificationRef,
+        handleAddClick
     } = useChambres();
 
 
@@ -65,16 +62,7 @@ const Chambres = () => {
                 <h2 className="mr-auto text-lg font-medium">Gestion des Chambres</h2>
                 <Button
                     variant="primary"
-                    onClick={() => {
-                        setSelectedChambre(null);
-                        setChambreFormData({
-                            chambreNom: "",
-                            chambreConfigId: 0,
-                            etatChambre: "DISPONIBLE",
-                            residenceId: 0
-                        });
-                        setIsModalOpen(true);
-                    }}
+                    onClick={handleAddClick}
                     className="btn btn-primary"
                 >
                     <Lucide icon="Plus" className="w-4 h-4 mr-1" />

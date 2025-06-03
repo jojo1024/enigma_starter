@@ -59,9 +59,6 @@ const ResidenceForm: React.FC<ResidenceFormProps> = ({
         if (!currentResidence?.residenceImages) return;
         const updatedImages = [...currentResidence.residenceImages];
         updatedImages.splice(index, 1);
-
-
-
         onFormChange('residenceImages', updatedImages);
     };
 

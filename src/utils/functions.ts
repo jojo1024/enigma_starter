@@ -1,3 +1,6 @@
+import { AppState } from "../stores/slices/appSlice";
+import { store } from "../stores/store";
+
 /**
  * Retourne les classes CSS en fonction du statut de la chambre
  * @param status Statut de la chambre (Disponible, Occupée, Réservée, Maintenance)
@@ -137,3 +140,11 @@ export const getStatusClass = (status: string): string => {
         reader.onerror = error => reject(error);
       });
     };
+
+    export const userHasRight = (right: string) => {
+      console.log("🚀 ~ userHasRight ~ right:", right)
+      const appState = store?.getState()?.app as AppState;
+      const connectionInfo = appState?.connectionInfo;
+      if (connectionInfo?.roleUtilisateurNom === "ADMIN") return true
+      return connectionInfo?.roleUtilisateurNom === right ? true : false;
+  };

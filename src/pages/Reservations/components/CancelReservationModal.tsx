@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import { Dialog } from '../../../base-components/Headless';
 import Lucide from '../../../base-components/Lucide';
 import CustomButton from '../../../base-components/CustomButton';
@@ -20,18 +20,19 @@ const CancelReservationModal: React.FC<CancelReservationModalProps> = ({
     reservation,
     isLoading,
 }) => {
+    const cancelButtonRef = useRef(null);
     if (!reservation) return null;
 
     return (
         <Dialog
             open={isOpen}
             onClose={() => !isLoading && onClose()}
-            className="relative z-50"
+            initialFocus={cancelButtonRef}
         >
-            <Dialog.Panel className="fixed inset-0 z-10 overflow-y-auto">
-                <div className="flex items-center justify-center min-h-screen p-4">
-                    <div className="bg-white rounded-lg shadow-xl w-full max-w-md mx-auto">
-                        <div className="p-5">
+            <Dialog.Panel >
+                <div className="flex items-center justify-center p-4">
+                    <div className=" rounded-lg shadow-xl w-full max-w-md mx-auto">
+                        <div className="p-2">
                             <div className="text-center">
                                 <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-danger/20">
                                     <Lucide icon="AlertTriangle" className="h-6 w-6 text-danger" />

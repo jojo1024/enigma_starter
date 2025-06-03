@@ -71,7 +71,7 @@ export default function ConfirmeBox(props: IConfirmeBoxProps) {
                         // @ts-ignore
                         type={type}
                         disable={disabled}
-
+                        variant='danger'
                     />
                 </div>
             </Dialog.Panel>

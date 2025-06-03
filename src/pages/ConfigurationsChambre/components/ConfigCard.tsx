@@ -10,8 +10,6 @@ interface ConfigCardProps {
     onPrevImage: () => void;
     onEdit: (config: IConfigChambre) => void;
     onDelete: (configId: number) => void;
-    getResidenceName: (id: number) => string;
-    getTypeName: (id: number) => string;
 }
 
 const ConfigCard: React.FC<ConfigCardProps> = ({
@@ -20,9 +18,7 @@ const ConfigCard: React.FC<ConfigCardProps> = ({
     onNextImage,
     onPrevImage,
     onEdit,
-    onDelete,
-    getResidenceName,
-    getTypeName,
+    onDelete
 }) => {
     const configId = config.configChambreId ?? 0;
 

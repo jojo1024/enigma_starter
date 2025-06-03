@@ -41,12 +41,28 @@ export const ResidenceSchema = CreateResidenceSchema.extend({
     residenceDateModification: z.date(),
 });
 
+// Interface explicite pour Residence
+export interface IResidence {
+    residenceId: number;
+    residenceNom: string;
+    residenceDescription?: string;
+    residenceAdresse?: string;
+    residenceTelephone?: string;
+    residenceEmail?: string;
+    residenceImages: ResidenceImage[];
+    residencePrixDeBase: number;
+    residenceLocalisation?: Localisation;
+    status: number;
+    residenceDateCreation: Date;
+    residenceDateModification: Date;
+}
+
 // Types générés à partir des schémas Zod
 export type Localisation = z.infer<typeof LocalisationSchema>;
 export type ResidenceImage = z.infer<typeof ImageSchema>;
 export type CreateResidence = z.infer<typeof CreateResidenceSchema>;
 export type UpdateResidence = z.infer<typeof UpdateResidenceSchema>;
-export type Residence = z.infer<typeof ResidenceSchema>;
+export type Residence = IResidence;
 
 // Enum pour le statut
 export enum ResidenceStatus {

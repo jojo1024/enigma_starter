@@ -76,10 +76,7 @@ export const useUtilisateurs = () => {
     };
 
     const handleDelete = (utilisateur: Utilisateur) => {
-        setUtilisateurFormData({
-            ...utilisateurFormData,
-            utilisateurNom: utilisateur.utilisateurNom
-        });
+        setSelectedUtilisateur(utilisateur);
         setIsDeleteModalOpen(true);
     };
 
@@ -148,24 +145,24 @@ export const useUtilisateurs = () => {
     };
 
     const handleDeleteConfirm = async () => {
-        if (selectedUtilisateur) {
-            setIsDeleting(true);
-            try {
-                await dispatch(deleteUtilisateur(selectedUtilisateur.utilisateurId)).unwrap();
-                displayNotification({
-                    type: "success",
-                    content: "Utilisateur supprimé avec succès"
-                });
-                setIsDeleteModalOpen(false);
-                setSelectedUtilisateur(null);
-            } catch (error) {
-                displayNotification({
-                    type: "error",
-                    content: "Une erreur est survenue lors de la suppression"
-                });
-            } finally {
-                setIsDeleting(false);
-            }
+        if (!selectedUtilisateur) return;
+        
+        setIsDeleting(true);
+        try {
+            await dispatch(deleteUtilisateur(selectedUtilisateur.utilisateurId)).unwrap();
+            displayNotification({
+                type: "success",
+                content: "Utilisateur supprimé avec succès"
+            });
+            setIsDeleteModalOpen(false);
+            setSelectedUtilisateur(null);
+        } catch (error) {
+            displayNotification({
+                type: "error",
+                content: "Une erreur est survenue lors de la suppression"
+            });
+        } finally {
+            setIsDeleting(false);
         }
     };
 

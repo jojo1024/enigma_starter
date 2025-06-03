@@ -11,15 +11,7 @@ import { IConfigChambre } from '../../schema/configChambre.schema';
 import { NotificationElement } from '../../base-components/Notification';
 import { CustomNotification, INotification } from '../../components/Notification';
 // Données d'exemple pour les résidences et types de chambres
-const initialResidences = [
-    { residenceId: 1, residenceNom: 'Résidence Principale' },
-    { residenceId: 2, residenceNom: 'Résidence Secondaire' },
-];
 
-const initialTypesChambre = [
-    { typeId: 1, typeNom: 'Standard', typeDescription: 'Chambre standard' },
-    { typeId: 2, typeNom: 'Suite', typeDescription: 'Suite luxueuse' },
-];
 
 const ConfigurationsChambre: React.FC = () => {
     const {
@@ -75,16 +67,23 @@ const ConfigurationsChambre: React.FC = () => {
     const handleSaveWithNotification = async () => {
         setIsSaving(true);
         try {
-            await handleSaveConfiguration();
-            displayNotification({
-                type: "success",
-                content: editMode ? "La configuration a été modifiée avec succès" : "La configuration a été créée avec succès"
-            });
-            setOpenSlideOver(false);
-        } catch (error) {
+            const result = await handleSaveConfiguration();
+            if (result && result.success) {
+                displayNotification({
+                    type: "success",
+                    content: editMode ? "La configuration a été modifiée avec succès" : "La configuration a été créée avec succès"
+                });
+                setOpenSlideOver(false);
+            } else {
+                displayNotification({
+                    type: "error",
+                    content: result?.error || "Une erreur est survenue lors de la sauvegarde"
+                });
+            }
+        } catch (error: any) {
             displayNotification({
                 type: "error",
-                content: "Une erreur est survenue lors de la sauvegarde"
+                content: error.message || "Une erreur inattendue est survenue"
             });
         } finally {
             setIsSaving(false);
@@ -111,13 +110,7 @@ const ConfigurationsChambre: React.FC = () => {
         }
     };
 
-    const getResidenceName = (id: number) => {
-        return initialResidences.find(r => r.residenceId === id)?.residenceNom || 'Résidence inconnue';
-    };
 
-    const getTypeName = (id: number) => {
-        return initialTypesChambre.find(t => t.typeId === id)?.typeNom || 'Type inconnu';
-    };
 
     return (
         <div className="p-5 mt-5 box">
@@ -152,8 +145,6 @@ const ConfigurationsChambre: React.FC = () => {
                             onPrevImage={() => config.configChambreId && handlePrevImage(config.configChambreId)}
                             onEdit={handleEditConfiguration}
                             onDelete={handleDeleteConfiguration}
-                            getResidenceName={getResidenceName}
-                            getTypeName={getTypeName}
                         />
                     ))}
                 </div>

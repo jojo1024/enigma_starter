@@ -37,6 +37,7 @@ export const createChambre = createAsyncThunk(
     'chambre/create',
     async (chambre: CreateChambre) => {
         const response = await chambreService.createChambre(chambre);
+        console.log("🚀 ~ responsellllllllllllll:", response)
         return response;
     }
 );
@@ -95,9 +96,9 @@ const chambreSlice = createSlice({
                 state.loading = true;
                 state.error = null;
             })
-            .addCase(createChambre.fulfilled, (state, action) => {
+            .addCase(createChambre.fulfilled, (state, action:any) => {
                 state.loading = false;
-                state.chambres.push(action.payload);
+                state.chambres.push(action.payload?.data[0]);
             })
             .addCase(createChambre.rejected, (state, action) => {
                 state.loading = false;

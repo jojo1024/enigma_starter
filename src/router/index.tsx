@@ -12,6 +12,7 @@ import { useAppSelector } from "../stores/store";
 import { selectConnectionInfo, selectIsLoggedIn } from "../stores/slices/appSlice";
 import UpdatePassword from "../pages/Login/UpdatePassword";
 import Login from "../pages/Login";
+import Prestations from "../pages/prestations";
 
 function Router() {
   const navigate = useNavigate()
@@ -50,6 +51,10 @@ function Router() {
         {
           path: "reservations",
           element: <Reservations />,
+        },
+        {
+          path: "nos-prestations",
+          element: <Prestations />,
         },
         // {
         //   path: "clients",

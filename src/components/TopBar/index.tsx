@@ -88,7 +88,14 @@ function Main(props: { layout?: "side-menu" | "simple-menu" | "top-menu" }) {
 
           {/* END: Notifications */}
           {/* BEGIN: Account Menu */}
-          <Menu>
+          <div className="flex flex-col mr-3 text-white intro-x sm:mr-6">
+            <span className="relative hidden sm:block">
+              {connectionInfo?.utilisateurNom}
+            </span>
+            <span className="relative text-slate-400 hidden sm:block">
+              {connectionInfo?.roleUtilisateurNom}
+            </span>
+          </div>          <Menu>
             <Menu.Button className="block w-8 h-8 overflow-hidden rounded-full shadow-lg image-fit zoom-in intro-x">
               <img
                 alt="Midone Tailwind HTML Admin Template"

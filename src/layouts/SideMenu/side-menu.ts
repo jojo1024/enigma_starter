@@ -1,6 +1,6 @@
 import { NavigateFunction } from "react-router-dom";
-import { Menu } from "../../stores/slices/sideMenuSlice";
 import { slideUp, slideDown } from "../../utils/helper";
+import { Menu } from "../../stores/slices/sideMenuSlice";
 
 interface Location {
   pathname: string;
@@ -42,6 +42,7 @@ const nestedMenu = (menu: Array<Menu | "divider">, location: Location) => {
         pathname: item.pathname,
         subMenu: item.subMenu,
         ignore: item.ignore,
+        right: item.right
       };
       menuItem.active =
         ((location.forceActiveMenu !== undefined &&

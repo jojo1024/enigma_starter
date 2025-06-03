@@ -34,21 +34,7 @@ const ReservationFilter: React.FC<ReservationFilterProps> = ({
         />
       </div>
       
-      {/* Filtre de statut */}
-      <div className="col-span-12 sm:col-span-6 lg:col-span-3 intro-y">
-        <FormSelect
-          value={filters.status}
-          onChange={(e) => onFilterChange('status', e.target.value)}
-          className="shadow-md"
-        >
-          <option value="all">Tous les statuts</option>
-          <option value="pending">En attente</option>
-          <option value="confirmed">Confirmée</option>
-          <option value="checked_in">Arrivée</option>
-          <option value="checked_out">Terminée</option>
-          <option value="cancelled">Annulée</option>
-        </FormSelect>
-      </div>
+    
       
       {/* Filtre de résidence */}
       <div className="col-span-12 sm:col-span-6 lg:col-span-3 intro-y">

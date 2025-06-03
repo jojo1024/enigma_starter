@@ -75,11 +75,11 @@ export const useConfigChambre = () => {
             errors.description = "La description est requise";
         }
 
-        if (config.configChambrePrixSemaine < 5000) {
+        if (isNaN(config.configChambrePrixSemaine) || config.configChambrePrixSemaine < 5000) {
             errors.prixSemaine = "Le prix semaine doit être d'au moins 5 000 F CFA";
         }
 
-        if (config.configChambrePrixWeekend < 5000) {
+        if (isNaN(config.configChambrePrixWeekend) || config.configChambrePrixWeekend < 5000) {
             errors.prixWeekend = "Le prix weekend doit être d'au moins 5 000 F CFA";
         }
 
@@ -101,8 +101,8 @@ export const useConfigChambre = () => {
             configTypeChambreId: 1,
             configChambreNom: '',
             configChambreDescription: '',
-            configChambrePrixSemaine: 25000,
-            configChambrePrixWeekend: 30000,
+            configChambrePrixSemaine: 10000,
+            configChambrePrixWeekend: 10000,
             configCapaciteAdultes: 2,
             configChambreImages: [],
             configDateCreation: '',
@@ -174,17 +174,28 @@ export const useConfigChambre = () => {
         }
 
         try {
+            let response;
             if (editMode) {
-                await dispatch(updateConfigChambre(currentConfig) as unknown as AnyAction).unwrap();
-                toast.success('Configuration mise à jour avec succès');
+                response = await dispatch(updateConfigChambre(currentConfig) as unknown as AnyAction).unwrap();
             } else {
-                await dispatch(createConfigChambre(currentConfig) as unknown as AnyAction).unwrap();
-                toast.success('Configuration créée avec succès');
+                response = await dispatch(createConfigChambre(currentConfig) as unknown as AnyAction).unwrap();
             }
+            
+            if (response?.error) {
+                throw new Error(response.error);
+            }
+
             setOpenSlideOver(false);
             setCurrentConfig(null);
-        } catch (error) {
-            toast.error('Erreur lors de l\'enregistrement de la configuration');
+            return { success: true };
+        } catch (error: any) {
+            console.error("Erreur lors de l'enregistrement:", error);
+            if (error.message) {
+                setFormErrors({ submit: error.message });
+            } else {
+                setFormErrors({ submit: 'Une erreur est survenue lors de l\'enregistrement' });
+            }
+            return { success: false, error: error.message || 'Une erreur est survenue' };
         }
     };
 

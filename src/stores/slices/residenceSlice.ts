@@ -128,7 +128,7 @@ const residenceSlice = createSlice({
             .addCase(updateResidence.fulfilled, (state, action:any) => {
                 console.log("🚀 ~ .addCase ~ action:", action)
                 state.loading = false;
-                const index = state.residences.findIndex(r => r.residenceId === action.payload.data[0].residenceId);
+                const index = state.residences.findIndex(r => r.residenceId === action.payload?.data[0]?.residenceId);
                 if (index !== -1) {
                     state.residences[index] = action.payload.data[0];
                 }

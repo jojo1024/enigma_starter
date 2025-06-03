@@ -44,7 +44,7 @@ const ReservationCard: React.FC<ReservationCardProps> = ({
                     <span className={`px-2 py-0.5 rounded-full text-xs border ${getStatusColor(reservation.reservationStatut)}`}>
                         {translateStatus(reservation.reservationStatut)}
                     </span>
-                    <Menu className="ml-3">
+                    <Menu >
                         <Menu.Button className="block w-5 h-5">
                             <Lucide icon="MoreVertical" className="w-5 h-5 text-slate-500" />
                         </Menu.Button>

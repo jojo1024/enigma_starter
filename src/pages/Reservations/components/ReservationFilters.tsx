@@ -6,6 +6,8 @@ import { formatCurrency } from '../../../utils/functions';
 import { FormInput, FormSelect } from '../../../base-components/Form';
 import Litepicker from '../../../base-components/Litepicker';
 import Button from '../../../base-components/Button';
+import { useAppSelector } from '../../../stores/store';
+import { selectConnectionInfo } from '../../../stores/slices/appSlice';
 
 interface ReservationFiltersProps {
     residences: Residence[];
@@ -50,6 +52,7 @@ const ReservationFilters: React.FC<ReservationFiltersProps> = ({
     setGuestsRange,
     onExport,
 }) => {
+    const connectionInfo = useAppSelector(selectConnectionInfo);
     const resetFilters = () => {
         setSearchTerm('');
         setResidenceFilter('all');
@@ -118,6 +121,8 @@ const ReservationFilters: React.FC<ReservationFiltersProps> = ({
                 {/* Sélecteur de résidence et bouton vider */}
                 <div className="flex gap-2">
                     <div className="flex-1">
+                        {connectionInfo?.roleUtilisateurNom === "ADMIN" 
+                        ?
                         <FormSelect
                             value={residenceFilter}
                             onChange={(e) => setResidenceFilter(e.target.value)}
@@ -129,6 +134,10 @@ const ReservationFilters: React.FC<ReservationFiltersProps> = ({
                                 </option>
                             ))}
                         </FormSelect>
+                        :
+                        <div>{connectionInfo?.residenceNom}</div>
+                        }
+                        
                     </div>
                     <button
                         onClick={resetFilters}

@@ -39,6 +39,7 @@ interface CustomDataTableProps<T> {
   search?: string;
   setSearch?: (value: string) => void;
   showSearchBar?: boolean;
+  renderRowDetails?: (row: T) => React.ReactNode;
 }
 
 const CustomDataTable = <T,>({
@@ -64,7 +65,8 @@ const CustomDataTable = <T,>({
   noDataMessage = 'Aucune donnée disponible',
   search,
   setSearch,
-  showSearchBar = false
+  showSearchBar = false,
+  renderRowDetails
 }: CustomDataTableProps<T>) => {
   const [allSelected, setAllSelected] = useState(false);
   const [showColumnSettings, setShowColumnSettings] = useState(false);
@@ -266,54 +268,56 @@ const CustomDataTable = <T,>({
               data.slice(startIndex, endIndex).map((row, rowIndex) => {
                 const isSelected = isRowSelected(row);
                 return (
-                  <tr
-                    key={rowKey(row)}
-                    className={clsx(
-                      'cursor-pointer pl-3 border-b hover:bg-slate-200 dark:hover:bg-[#232D45]',
-                      isSelected ? 'bg-blue-50 dark:bg-blue-900/20' : ''
-                    )}
-                    onClick={() => onSelectRow && onSelectRow(row)}
-                  >
-                    {onSelectRow && (
-                      <td className="py-3 pl-3 text-center">
-                        <div className="text-sm">
-                          <FormCheck className="mt-2">
-                            <FormCheck.Input
-                              id={`checkbox-${rowIndex}`}
-                              type="checkbox"
-                              checked={isSelected}
-                              onChange={(e) => {
-                                e.stopPropagation(); // Empêcher la propagation de l'événement click
-                                onSelectRow(row);
-                              }}
-                            />
-                          </FormCheck>
-                        </div>
-                      </td>
-                    )}
-
-                    {visibleColumns.map((column, colIndex) => (
-                      column.visible !== false && (
-                        <td
-                          key={colIndex}
-                          onDoubleClick={onRowDoubleClick ? () => onRowDoubleClick(row) : undefined}
-                          className={`py-2 pl-3 ${column.tableTextPosition ? column.tableTextPosition : "text-center"} ${column.className || ""}`}
-                        >
-                          {(column.renderCell
-                            ? column.renderCell(
-                              column.accessor ? (isSelected ? selectedRows.find(r => rowKey(r) === rowKey(row))?.[column.accessor] : row[column.accessor]) : null,
-                              row,
-                              column.accessor
-                                ? (newValue: any) => handleInputChange(rowKey(row), column.accessor!, newValue)
-                                : () => { }
-                            )
-                            : column.accessor
-                              ? row[column.accessor]
-                              : null) as React.ReactNode}
+                  <React.Fragment key={rowKey(row)}>
+                    <tr
+                      className={clsx(
+                        'cursor-pointer pl-3 border-b hover:bg-slate-200 dark:hover:bg-[#232D45]',
+                        isSelected ? 'bg-blue-50 dark:bg-blue-900/20' : ''
+                      )}
+                      onClick={() => onSelectRow && onSelectRow(row)}
+                    >
+                      {onSelectRow && (
+                        <td className="py-3 pl-3 text-center">
+                          <div className="text-sm">
+                            <FormCheck className="mt-2">
+                              <FormCheck.Input
+                                id={`checkbox-${rowIndex}`}
+                                type="checkbox"
+                                checked={isSelected}
+                                onChange={(e) => {
+                                  e.stopPropagation();
+                                  onSelectRow(row);
+                                }}
+                              />
+                            </FormCheck>
+                          </div>
                         </td>
-                      )
-                    ))}
-                  </tr>
+                      )}
+
+                      {visibleColumns.map((column, colIndex) => (
+                        column.visible !== false && (
+                          <td
+                            key={colIndex}
+                            onDoubleClick={onRowDoubleClick ? () => onRowDoubleClick(row) : undefined}
+                            className={`py-2 pl-3 ${column.tableTextPosition ? column.tableTextPosition : "text-center"} ${column.className || ""}`}
+                          >
+                            {(column.renderCell
+                              ? column.renderCell(
+                                column.accessor ? (isSelected ? selectedRows.find(r => rowKey(r) === rowKey(row))?.[column.accessor] : row[column.accessor]) : null,
+                                row,
+                                column.accessor
+                                  ? (newValue: any) => handleInputChange(rowKey(row), column.accessor!, newValue)
+                                  : () => { }
+                              )
+                              : column.accessor
+                                ? row[column.accessor]
+                                : null) as React.ReactNode}
+                          </td>
+                        )
+                      ))}
+                    </tr>
+                    {renderRowDetails && renderRowDetails(row)}
+                  </React.Fragment>
                 );
               })
             )}

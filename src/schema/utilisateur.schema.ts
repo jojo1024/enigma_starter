@@ -22,6 +22,8 @@ export const UtilisateurSchema = CreateUtilisateurSchema.extend({
     roleUtilisateurNom: z.string(),
     utilisateurDateCreation: z.date(),
     utilisateurDateModification: z.date(),
+    residenceNom: z.string(),
+    residenceId: z.number().positive(),
 });
 
 // Types générés à partir des schémas Zod

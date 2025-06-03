@@ -119,7 +119,7 @@ const Login: React.FC<{ setDoitChangerDeMotdepasse: React.Dispatch<React.SetStat
                                     <FormInput
                                         type="text"
                                         className="block px-4 py-3 intro-x login__input min-w-full xl:min-w-[350px]"
-                                        placeholder="Utilisateur"
+                                        placeholder="Numero de téléphone"
                                         onChange={(e: any) => setLogin(e.target.value)}
                                     />
 
